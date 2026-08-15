@@ -1,0 +1,13 @@
+{
+  "name": "raycasters-for-old-dogs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A WebXR ray caster practice range for the Meta Quest browser.",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "test": "node test/smoke.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.0"
+  }
+}

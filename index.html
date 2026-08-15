@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A WebXR ray caster practice range for the Meta Quest browser.">
+<title>Raycasters for Old Dogs</title>
+<link rel="stylesheet" href="./styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🐕</text></svg>">
+</head>
+<body>
+
+<div id="overlay">
+  <main class="card">
+    <h1>Raycasters<span class="thin"> for </span>Old Dogs</h1>
+    <p class="lede">A gentle practice range for the pointer beam that comes out of your VR controller.</p>
+
+    <div id="status" class="status status--checking">Checking your headset&hellip;</div>
+
+    <button id="enter-vr" class="btn btn--primary" hidden>Put on the headset &amp; start</button>
+    <button id="enter-desktop" class="btn">Try it here on this screen</button>
+
+    <ol class="steps">
+      <li>Hold a controller in each hand. A colored beam shines out of the front.</li>
+      <li>Move your <em>hand</em> to aim the beam &mdash; not your head, not your eyes.</li>
+      <li>When the dot lands on a target, squeeze the <strong>trigger</strong> with your index finger.</li>
+      <li>That is the whole trick. Everything in VR works this way.</li>
+    </ol>
+
+    <details class="notes">
+      <summary>Notes for the person setting this up</summary>
+      <ul>
+        <li>Open this page in the Meta Quest <strong>Browser</strong> app, then press the start button above.</li>
+        <li>The headset will ask permission to enter immersive mode &mdash; say yes.</li>
+        <li>Nothing moves you around: you stay standing in one spot the whole time, so it will not make anyone queasy.</li>
+        <li>Hand tracking works too. Put the controllers down and pinch your thumb and index finger together instead of squeezing a trigger.</li>
+        <li>There is a live diagnostics board inside showing controller, button, and ray data &mdash; useful for checking that a headset is behaving.</li>
+      </ul>
+    </details>
+  </main>
+</div>
+
+<script type="module" src="./src/app.js"></script>
+</body>
+</html>
