@@ -76,7 +76,18 @@
           <div class="mark__icon" aria-hidden="true">🥏</div>
           <div>
             <span class="mark__label">Fetch</span>
-            <p>Five short lessons, then a practice range that keeps going as long as you want it to.</p>
+            <p>Seven short lessons, then a practice range that keeps going as long as you want it to.
+              Five teach aiming; the last two walk the <strong>whole controller</strong> &mdash; trigger, grip,
+              thumbstick and its click, and both round buttons &mdash; ticking each one off as you press it.</p>
+          </div>
+        </li>
+        <li class="mark">
+          <div class="mark__icon" aria-hidden="true">🚪</div>
+          <div>
+            <span class="mark__label">The way out</span>
+            <p>The two buttons below the face belong to the headset, not to this page. Pressing one
+              makes everything vanish &mdash; <strong>that is not a mistake, and pressing it again brings you
+              back</strong>. The last lesson has you do it once on purpose, so it never comes as a surprise.</p>
           </div>
         </li>
         <li class="mark">
@@ -103,6 +114,9 @@
           <li>Hand tracking works too. Put the controllers down and pinch thumb to index finger instead of squeezing a trigger.</li>
           <li>Buttons float below the targets: <strong>Repeat</strong>, <strong>Skip</strong>, and one to hide the diagnostics board. They are pointed at and clicked exactly like the targets, which is the point.</li>
           <li>Lesson one finishes on a steady hold rather than a button press. If holding still is the hard part, that timer is in <strong>src/lessons.js</strong>.</li>
+          <li>The controller check asks for each control on <strong>both</strong> controllers, so a dead button on one of them shows up as the one box that never ticks.</li>
+          <li>The Meta and Menu buttons cannot be read by any web page &mdash; the headset keeps them for itself. They are verified instead by watching the session get taken away and handed back, which is the counter marked <strong>trips away</strong> on the board.</li>
+          <li>The board reports the controller <strong>layout</strong> exactly as the headset names it, and lists any button it reports that we did not expect. If a headset turns up with a different arrangement, it says so rather than quietly missing it.</li>
         </ul>
       </details>
 

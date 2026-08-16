@@ -57,7 +57,34 @@ deficit without any special mode.
 | 3 | Sweep | Targets appear across the arc; move your arm, not just your wrist. |
 | 4 | Smaller | Same again, at a size that needs a steady hand. |
 | 5 | Movers | Drifting targets, so aim has to track. |
+| 6 | The whole controller | Every control on both controllers, ticked off as it is pressed. |
+| 7 | The way out | The system buttons, and how to come back from them. |
 | — | Free practice | Endless targets of mixed size and drift. |
+
+### Lesson 6, the controller check
+
+Walks the full input surface a hand at a time — trigger, grip, thumbstick,
+thumbstick click, and the two round buttons (A/B on the right, X/Y on the left)
+— suggesting the next unconfirmed one and ticking each off as it registers.
+There is no failure state: a control is either confirmed working or still
+waiting, which makes the same screen serve as a lesson and as a hardware check.
+Asking for both controllers means a dead button shows up as the one box that
+never ticks.
+
+Analog controls need a firm press, not a brush: trigger and grip must exceed
+0.6, and the thumbstick must be pushed past 0.65 of its travel.
+
+### Lesson 7, the system buttons
+
+**The Meta button and the Menu button cannot be read by a web page.** They are
+reserved by the runtime, and no `gamepad.buttons[]` entry ever reports them.
+
+They are verified by consequence instead. Pressing Meta blurs the immersive
+session, so `XRSession.visibilityState` leaves `visible` and a
+`visibilitychange` event fires; coming back flips it home. The lesson counts
+that round trip — shown as **trips away** on the board — and uses it to teach
+the thing beginners most need: everything vanishing is not a mistake, and the
+same button brings it all back.
 
 Three buttons float below the range: **Repeat**, **Skip** (**Finish** during
 free practice), and **Board** to hide or show the diagnostics panel. They are
@@ -68,8 +95,12 @@ pointed at and clicked the same way as the targets, which is the point.
 The right-hand panel is the tester half. It reads, live:
 
 - frame rate, WebXR support, session mode, reference space type, headset refresh rate
-- per input source: handedness, target ray mode, hardware profile, hand-tracking flag
-- trigger and grip analog values as meters, thumbstick axes, and which buttons are down
+- per input source: the controller layout as the headset names it, target ray mode, hand-tracking flag
+- trigger and grip analog values as meters, and thumbstick axes
+- every button the runtime reports, named where the name is known and numbered
+  where it is not, marked `!` pressed and `~` touched — so a controller with an
+  unfamiliar arrangement reports itself instead of going silently missing
+- the system-button trip counter
 - the ray's world direction and what it currently hits, with distance
 
 Useful for confirming a headset, a controller, or a pairing is behaving before
@@ -96,10 +127,21 @@ npm install
 npm test
 ```
 
+Two suites run:
+
+`test/controllermap.test.js` unit-tests the controller check against synthetic
+gamepads — button naming per hand, the analog thresholds, axis fallback, one
+control at a time being suggested, a second controller reopening the check, and
+unfamiliar hardware being recorded rather than dropped. A headless browser
+cannot squeeze a real trigger, so this is where that logic is actually proven.
+
 `test/smoke.js` drives the flat-screen path in headless Chromium: the page
 loads clean, lessons advance, the ray hits what it is aimed at, hits and misses
-score correctly. WebXR itself cannot be driven headlessly, so the immersive
-path still needs a human in a headset.
+score correctly, and the two headset-only lessons announce themselves and step
+aside instead of dead-ending.
+
+WebXR itself cannot be driven headlessly, so the immersive path — the real
+controllers, the real Meta button — still needs a human in a headset.
 
 ## Publishing to GitHub Pages
 
@@ -116,6 +158,7 @@ src/app.js          scene, panels, game state, entry points
 src/pointers.js     the ray caster: controllers, hands, and mouse
 src/targets.js      the targets
 src/lessons.js      the lesson plan
+src/controllermap.js  the Touch input map and the controller check
 src/ui3d.js         canvas-textured panels and 3D buttons
 src/diagnostics.js  the live tester board
 src/audio.js        WebAudio beeps

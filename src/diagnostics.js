@@ -1,4 +1,5 @@
 import { Panel, COLORS } from './ui3d.js';
+import { thumbstick } from './controllermap.js';
 
 const n = (v, digits = 2) => (typeof v === 'number' ? v.toFixed(digits) : '—');
 
@@ -67,9 +68,11 @@ export class Diagnostics {
       const source = pointer.inputSource;
 
       if (source) {
-        rows.push([`${tag} mode`, source.targetRayMode + (pointer.isHand ? ' (hand)' : '')]);
         const profile = source.profiles?.[0];
-        if (profile) rows.push([`${tag} profile`, shorten(profile)]);
+        // The reported profile is the ground truth for which controller layout
+        // this actually is — worth showing rather than assuming.
+        if (profile) rows.push([`${tag} layout`, shorten(profile)]);
+        rows.push([`${tag} mode`, source.targetRayMode + (pointer.isHand ? ' (hand)' : '')]);
 
         const pad = source.gamepad;
         if (pad) {
@@ -77,12 +80,23 @@ export class Diagnostics {
           const grip = pad.buttons[1];
           rows.push([`${tag} trigger`, bar(trigger?.value ?? 0), trigger?.pressed ? COLORS.good : COLORS.ink]);
           rows.push([`${tag} grip`, bar(grip?.value ?? 0), grip?.pressed ? COLORS.good : COLORS.ink]);
-          const [x = 0, y = 0] = pad.axes.length >= 4 ? pad.axes.slice(2) : pad.axes;
-          rows.push([`${tag} stick`, `${n(x, 1)}, ${n(y, 1)}`]);
-          const pressed = pad.buttons
-            .map((b, i) => (b.pressed ? BUTTON_NAMES[i] || `b${i}` : null))
-            .filter(Boolean);
-          rows.push([`${tag} pressed`, pressed.join(' ') || '—']);
+
+          const { x, y } = thumbstick(pad);
+          rows.push([`${tag} stick`, `${n(x, 2)}, ${n(y, 2)}`,
+            Math.hypot(x, y) > 0.2 ? COLORS.good : COLORS.ink]);
+
+          // Every button the runtime reports, named where we know the name and
+          // numbered where we do not, so unfamiliar hardware still shows up.
+          const named = [];
+          const extra = [];
+          pad.buttons.forEach((button, index) => {
+            const name = buttonName(index, hand);
+            const live = button.pressed || button.touched;
+            const cell = (name || `b${index}`) + (button.pressed ? '!' : button.touched ? '~' : '·');
+            (name ? named : extra).push(live ? cell.toUpperCase() : cell);
+          });
+          rows.push([`${tag} buttons`, named.join(' ')]);
+          if (extra.length) rows.push([`${tag} other`, extra.join(' '), COLORS.warn]);
         } else {
           rows.push([`${tag} gamepad`, 'none', COLORS.warn]);
         }
@@ -97,11 +111,28 @@ export class Diagnostics {
       rows.push(['', '']);
     }
 
+    // The system buttons never appear above: the runtime keeps them.
+    rows.push(['meta / menu', 'system-held', COLORS.inkDim]);
+    rows.push(['trips away', this.systemTrips ?? 0,
+      (this.systemTrips ?? 0) > 0 ? COLORS.good : COLORS.inkDim]);
+
     return rows;
   }
 }
 
-const BUTTON_NAMES = ['trig', 'grip', '—', 'stick', 'A/X', 'B/Y'];
+// Names for the xr-standard indices Touch controllers report. Anything outside
+// this list is shown by number instead of being quietly dropped.
+function buttonName(index, handedness) {
+  const left = handedness === 'left';
+  return {
+    0: 'trig',
+    1: 'grip',
+    3: 'stick',
+    4: left ? 'X' : 'A',
+    5: left ? 'Y' : 'B',
+    6: 'rest',
+  }[index] || null;
+}
 
 function shorten(profile) {
   return profile.replace('oculus-', '').replace('meta-', '').replace('generic-', '').slice(0, 22);

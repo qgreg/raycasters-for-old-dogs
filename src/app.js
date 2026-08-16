@@ -4,6 +4,7 @@ import { Target } from './targets.js';
 import { Pointers } from './pointers.js';
 import { Diagnostics } from './diagnostics.js';
 import { LESSONS, PRAISE } from './lessons.js';
+import { ControllerCheck, CHECKS, labelFor } from './controllermap.js';
 import { sfx, resume as resumeAudio } from './audio.js';
 
 const ARC_RADIUS = 2.1;   // how far away the targets float
@@ -70,6 +71,12 @@ statsPanel.position.set(-1.32, 1.45, -1.72);
 statsPanel.rotation.y = 0.6;
 scene.add(statsPanel);
 
+const checklistPanel = new Panel({ width: 1.05, height: 1.18, pxPerMeter: 620 });
+checklistPanel.position.set(-1.32, 1.5, -1.72);
+checklistPanel.rotation.y = 0.6;
+checklistPanel.visible = false;
+scene.add(checklistPanel);
+
 const pointers = new Pointers(renderer, scene, camera, { isDragging: () => look.didDrag });
 const diagnostics = new Diagnostics(renderer, pointers);
 diagnostics.object3D.position.set(1.35, 1.5, -1.72);
@@ -130,7 +137,81 @@ const ctx = {
   done() {
     completeLesson();
   },
+
+  // --- controller check, used by the "rest of the controller" lesson
+  controllerCheck: null,
+  labelFor,
+  beginControllerCheck() {
+    ctx.controllerCheck = controllerCheck;
+    controllerCheck.reset();
+    statsPanel.visible = false;
+    checklistPanel.visible = true;
+    drawChecklist();
+  },
+  pollControllerCheck() {
+    const session = renderer.xr.getSession();
+    if (!session) return;
+    if (controllerCheck.poll(session.inputSources)) {
+      sfx.click();
+      const last = controllerCheck.lastConfirmed;
+      // Buzz the hand that just proved a control works.
+      for (const pointer of pointers.all) {
+        if (pointer.handedness === last?.hand) pointer.pulse(0.5, 50);
+      }
+    }
+    drawChecklist();
+  },
+
+  // --- system buttons, which WebXR never sees pressed
+  get systemTrips() { return systemTrips; },
 };
+
+const controllerCheck = new ControllerCheck();
+
+// The Meta and Menu buttons belong to the runtime, so a page cannot read them.
+// What it can see is the session being taken away and handed back — which is
+// the thing actually worth teaching: how to get out, and how to get back.
+let systemTrips = 0;
+let sessionAway = false;
+
+function watchSystemButtons(session) {
+  session.addEventListener('visibilitychange', () => {
+    if (session.visibilityState !== 'visible') {
+      sessionAway = true;
+    } else if (sessionAway) {
+      sessionAway = false;
+      systemTrips++;
+    }
+  });
+}
+
+function drawChecklist() {
+  const rows = [];
+  const hands = ['right', 'left'].filter((h) => controllerCheck.handsSeen.has(h));
+
+  if (!hands.length) {
+    rows.push(['waiting for', 'a controller', COLORS.warn]);
+  }
+
+  for (const hand of hands) {
+    rows.push([hand === 'left' ? 'LEFT HAND' : 'RIGHT HAND', '', COLORS.accent]);
+    for (const check of CHECKS) {
+      const done = controllerCheck.isDone(hand, check);
+      rows.push([
+        ' ' + labelFor(check, hand).replace(' button', ''),
+        done ? 'ok' : '·',
+        done ? COLORS.good : COLORS.inkDim,
+      ]);
+    }
+    rows.push(['', '']);
+  }
+
+  if (controllerCheck.unmapped.size) {
+    rows.push(['also reporting', [...controllerCheck.unmapped].map((i) => 'b' + i).join(' '), COLORS.warn]);
+  }
+
+  checklistPanel.rows({ title: 'Controller check', rows, rowSize: 0.05 });
+}
 
 function place(target, angleDeg, height) {
   const a = THREE.MathUtils.degToRad(angleDeg);
@@ -164,6 +245,24 @@ function startLesson(index) {
   lessonIndex = index;
   lesson = LESSONS[index];
   ctx.clearTargets();
+  ctx.controllerCheck = null;
+  checklistPanel.visible = false;
+  statsPanel.visible = true;
+
+  // Two lessons need real hardware. On a flat screen, say so and move along
+  // rather than parking the player in front of something they cannot finish.
+  if (lesson.needsHeadset && !renderer.xr.isPresenting) {
+    say({
+      title: lesson.title,
+      instruction: 'This one needs the headset and its controllers.',
+      footer: 'Skipping ahead…',
+    });
+    const skipping = index;
+    setTimeout(() => {
+      if (lessonIndex === skipping && !finished) startLesson(index + 1);
+    }, 2600);
+    return;
+  }
   say({ title: lesson.title, instruction: lesson.instruction, footer: lesson.footer || '' });
   buttons[1].setLabel(lesson.endless ? 'Finish' : 'Skip');
   lesson.start?.(ctx);
@@ -305,6 +404,7 @@ renderer.setAnimationLoop(() => {
   pointers.update();
   lesson?.update?.(dt, ctx);
   drawStats();
+  diagnostics.systemTrips = systemTrips;
   diagnostics.update();
 
   renderer.render(scene, camera);
@@ -389,6 +489,7 @@ async function enterVR() {
       if (hintEl) hintEl.hidden = true;
       setStatus('You left VR. Put the headset back on and press start whenever you like.', 'ok');
     });
+    watchSystemButtons(session);
     await renderer.xr.setSession(session);
     overlay.hidden = true;
     beginIfNeeded();
@@ -425,6 +526,12 @@ window.__debug = {
   get targets() { return ctx.targets.length; },
   get hovering() { return pointers.all.map((p) => p.hovered?.constructor.name ?? null).find(Boolean) ?? null; },
   get presenting() { return renderer.xr.isPresenting; },
+  get systemTrips() { return systemTrips; },
+  goto(id) {
+    const index = LESSONS.findIndex((l) => l.id === id);
+    if (index >= 0) startLesson(index);
+    return index;
+  },
   scene,
   pointers,
 };

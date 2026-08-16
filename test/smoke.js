@@ -7,9 +7,12 @@
  * the page loads clean, the lessons advance, the ray actually hits things, and
  * the score keeps up. The VR path still needs a human in a headset.
  */
-const { chromium } = require('playwright');
-const { spawn } = require('node:child_process');
-const path = require('node:path');
+import { chromium } from 'playwright';
+import { spawn } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PORT = process.env.PORT || 8125;
 const ROOT = path.resolve(__dirname, '..');
@@ -99,6 +102,21 @@ async function main() {
     check('buttons are interactive objects',
       (await debug(() => window.__debug.pointers.interactables.length)) >= 3,
       `lesson=${beforeLesson}`);
+
+    // The controller and system-button lessons need real hardware. On a flat
+    // screen they must announce that and step aside rather than dead-ending.
+    await debug(() => window.__debug.goto('controls'));
+    await page.waitForTimeout(400);
+    check('headset-only lesson says so',
+      /needs the headset/i.test((await debug(() => window.__debug.board)).instruction));
+
+    await page.waitForTimeout(2800);
+    check('and steps aside to the next one',
+      (await debug(() => window.__debug.lesson)) === 'system');
+
+    await page.waitForTimeout(3000);
+    check('both headset-only lessons step aside',
+      (await debug(() => window.__debug.lesson)) === 'range');
 
     check('no errors after interaction', errors.length === 0, errors.join(' | '));
     await page.screenshot({ path: path.join(ROOT, 'test', 'screenshot.png') });

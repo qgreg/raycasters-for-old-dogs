@@ -12,8 +12,8 @@ const HOLD_MS = 1200;
 export const LESSONS = [
   {
     id: 'aim',
-    title: 'Lesson 1 of 5',
-    instruction: 'Point your hand at the blue circle.\nHold the white dot on it.',
+    title: 'Lesson 1 of 7',
+    instruction: 'Point your hand at the circle.\nHold the white dot on it.',
     footer: 'No buttons yet — just aim.',
     start(ctx) {
       ctx.spawn(0.34, { angle: 0, height: 1.45 });
@@ -39,7 +39,7 @@ export const LESSONS = [
 
   {
     id: 'trigger',
-    title: 'Lesson 2 of 5',
+    title: 'Lesson 2 of 7',
     instruction: 'Now aim at the circle and squeeze the trigger\nwith your index finger.',
     footer: 'Three of them. Take your time.',
     remaining: 3,
@@ -61,7 +61,7 @@ export const LESSONS = [
 
   {
     id: 'sweep',
-    title: 'Lesson 3 of 5',
+    title: 'Lesson 3 of 7',
     instruction: 'Same again, but they move around.\nSwing your whole arm to follow.',
     footer: '',
     spots: [[-34, 1.7], [30, 1.25], [-22, 1.2], [38, 1.72], [0, 1.82]],
@@ -84,7 +84,7 @@ export const LESSONS = [
 
   {
     id: 'small',
-    title: 'Lesson 4 of 5',
+    title: 'Lesson 4 of 7',
     instruction: 'Smaller ones now.\nSteady hand, then squeeze.',
     footer: '',
     remaining: 6,
@@ -107,7 +107,7 @@ export const LESSONS = [
 
   {
     id: 'moving',
-    title: 'Lesson 5 of 5',
+    title: 'Lesson 5 of 7',
     instruction: 'Last one. These drift.\nLead them a little with the beam.',
     footer: '',
     remaining: 4,
@@ -131,6 +131,73 @@ export const LESSONS = [
       });
       ctx.say({ footer: `${this.remaining} to go` });
     },
+  },
+
+
+  {
+    id: 'controls',
+    title: 'Lesson 6 of 7',
+    instruction: 'Now the rest of the controller.\nPress each part once so we can check it.',
+    footer: '',
+    needsHeadset: true,
+    start(ctx) {
+      ctx.beginControllerCheck();
+    },
+    update(dt, ctx) {
+      const check = ctx.controllerCheck;
+      if (!check) return;
+      ctx.pollControllerCheck();
+
+      if (check.complete) return ctx.done();
+
+      if (!check.handsSeen.size) {
+        ctx.say({
+          instruction: 'Pick up a controller and press anything on it.',
+          footer: 'Waking one up can take a moment.',
+        });
+        return;
+      }
+
+      const next = check.next();
+      const { done, total } = check.counts;
+      if (next) {
+        const name = ctx.labelFor(next.check, next.hand);
+        ctx.say({
+          instruction: `${next.hand === 'left' ? 'Left' : 'Right'} hand: ${name}.\n${next.check.hint}`,
+          footer: `${done} of ${total} checked — no rush, and nothing here can go wrong`,
+        });
+      }
+    },
+    // Pointing at a target during this lesson is fine, it just does not advance it.
+    onMiss() {},
+  },
+
+  {
+    id: 'system',
+    title: 'Lesson 7 of 7',
+    instruction: 'Two buttons sit below the rest, and they belong to the headset\nrather than to this page.',
+    footer: 'The Meta button on the right, the Menu button on the left.',
+    needsHeadset: true,
+    start(ctx) {
+      this.startedAt = performance.now();
+      this.baseline = ctx.systemTrips;
+      ctx.say({
+        instruction: 'Press the round Meta button below your right thumb.\nEverything here will vanish. That is meant to happen.',
+        footer: 'Then press it once more to come back.',
+      });
+    },
+    update(dt, ctx) {
+      if (ctx.systemTrips > this.baseline) {
+        ctx.say({
+          instruction: 'And there you are again.\nThat is how you get back from anywhere.',
+          footer: 'Nothing you press on that menu can break this page.',
+        });
+        // A short beat so the sentence can be read before the lesson turns over.
+        if (!this.returnedAt) this.returnedAt = performance.now();
+        if (performance.now() - this.returnedAt > 2600) ctx.done();
+      }
+    },
+    onMiss() {},
   },
 
   {
