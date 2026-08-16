@@ -169,8 +169,16 @@ export class Panel extends THREE.Mesh {
       y += size * 1.6;
     }
 
-    const size = Math.round(canvas.width * rowSize);
-    const lineHeight = size * 1.45;
+    // Shrink to fit rather than silently dropping the rows that do not — a
+    // board that quietly shows one hand's worth of data is worse than a small one.
+    const available = canvas.height - y - pad;
+    let size = Math.round(canvas.width * rowSize);
+    let lineHeight = size * 1.45;
+    const floor = Math.round(canvas.width * 0.022);
+    while (rows.length * lineHeight > available && size > floor) {
+      size = Math.round(size * 0.94);
+      lineHeight = size * 1.45;
+    }
     ctx.font = `500 ${size}px ui-monospace, "SF Mono", Menlo, monospace`;
 
     for (const row of rows) {

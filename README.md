@@ -70,7 +70,12 @@ throughout — every control is asked for on the left and on the right.
 ### The hand pictures
 
 During the controller lessons a live diagram of each controller floats beside
-the player, one per hand, mirrored so each matches the controller it stands for.
+the player, one per hand. **Both use the same layout, deliberately.** Mirroring
+them made each picture read as the other hand's controller, and worse, it
+flipped the stick arrows and the live dot so that pushing left lit the right
+arrow. A large L/R and the button letters are what tell the two apart; the
+directions are never mirrored, because left is left on both hands.
+
 Four states are drawn at once and they mean different things:
 
 | State | Looks like |
@@ -84,6 +89,10 @@ The thumbstick is drawn with a dot at its true deflection, so the stick is seen
 moving rather than merely reported. That matters for more than charm: if a
 runtime reports an inverted axis, the dot travelling away from the highlighted
 arrow makes it obvious at a glance.
+
+The system button is drawn as a plainly labelled strip rather than a dot placed
+from guesswork — where it sits varies by controller, and a confidently wrong
+position teaches the wrong thing.
 
 The pictures and the diagnostics board share the space either side of the
 player, so they take turns — the **Hands** and **Board** buttons swap between
@@ -103,35 +112,28 @@ grip past 0.6, and the stick past 0.6 of its travel on the axis being asked for.
 
 ### Lesson 5, the system buttons
 
-**The Meta button and the Menu button cannot be read by a web page.** They are
-reserved by the runtime, and no `gamepad.buttons[]` entry ever reports them.
+**Neither the Meta button nor the Menu button appears in the WebXR controller
+profile.** The xr-standard mapping Meta publishes for Touch covers trigger,
+squeeze, thumbstick, the two face buttons and a thumbrest — and stops there. The
+runtime consumes the rest, so no `gamepad.buttons[]` entry ever reports them.
 
-They are verified by consequence instead. Pressing Meta blurs the immersive
+The Meta button is verified by consequence: pressing it blurs the immersive
 session, so `XRSession.visibilityState` leaves `visible` and a
-`visibilitychange` event fires; coming back flips it home. The lesson counts
-that round trip — shown as **trips away** on the board — and uses it to teach
-the thing beginners most need: everything vanishing is not a mistake, and the
-same button brings it all back.
+`visibilitychange` event fires; coming back flips it home. That round trip is
+counted and shown as **trips away** on the board. It is also the thing a
+beginner most needs to rehearse — everything vanishing is not a mistake, and the
+same button brings it back.
 
-Three buttons float below the range: **Repeat**, **Skip** (**Finish** during
-free practice), and **Board** to hide or show the diagnostics panel. They are
-pointed at and clicked the same way as the targets, which is the point.
+The Menu button gets measured rather than assumed. Whether anything reaches a
+web page from it may vary by headset and system version, so the lesson watches
+for *either* a session blur *or* a button index outside the known map, waits a
+few seconds, and then says plainly which happened. Both outcomes are a pass —
+the point is that the player learns where the button is, and the page does not
+claim a verification it did not make.
 
-## The diagnostics board
-
-The right-hand panel is the tester half. It reads, live:
-
-- frame rate, WebXR support, session mode, reference space type, headset refresh rate
-- per input source: the controller layout as the headset names it, target ray mode, hand-tracking flag
-- trigger and grip analog values as meters, and thumbstick axes
-- every button the runtime reports, named where the name is known and numbered
-  where it is not, marked `!` pressed and `~` touched — so a controller with an
-  unfamiliar arrangement reports itself instead of going silently missing
-- the system-button trip counter
-- the ray's world direction and what it currently hits, with distance
-
-Useful for confirming a headset, a controller, or a pairing is behaving before
-blaming the person holding it.
+Any unrecognised button index that does turn up is kept and shown under
+**other** on the board, so a headset that surfaces more than expected reports
+itself instead of going unnoticed.
 
 ## Running it locally
 

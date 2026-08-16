@@ -5,7 +5,7 @@ import { CHECKS, checkById, labelFor, thumbstick, isLive } from './controllermap
 /**
  * A live picture of one controller, drawn to a canvas.
  *
- * Three states are shown at once, and they mean different things:
+ * Four states are shown at once, and they mean different things:
  *   waiting   — outline only, not yet proven
  *   asked for — pulsing biscuit outline, this is the one to try now
  *   live      — filled biscuit, you are pressing it this instant
@@ -64,8 +64,13 @@ function styleFor({ confirmed, live, wanted, pulse }) {
  */
 export function drawController(ctx, w, h, opts) {
   const { handedness, gamepad = null, isConfirmed = () => false, wantedId = null, pulse = 0 } = opts;
-  const mirror = handedness === 'left';
-  const X = (u) => (mirror ? 1 - u : u) * w;   // flip the layout for the left hand
+  const left = handedness === 'left';
+
+  // Both hands are drawn with the SAME layout. Mirroring them made each picture
+  // read as the other hand's controller, and — worse — it flipped the stick
+  // arrows and the live dot, so pushing left lit the right arrow. The big L/R
+  // and the button letters are what tell the two apart.
+  const X = (u) => u * w;
   const Y = (v) => v * h;
   const S = (u) => u * w;
 
@@ -87,14 +92,19 @@ export function drawController(ctx, w, h, opts) {
     });
   };
 
-  // --- title -----------------------------------------------------------------
-  ctx.textAlign = 'center';
+  // --- title: a big letter, readable at a glance and from the corner of an eye
+  ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  ctx.font = `800 ${Math.round(S(0.088))}px system-ui, sans-serif`;
+  ctx.font = `900 ${Math.round(S(0.13))}px system-ui, sans-serif`;
   ctx.fillStyle = gamepad ? COLORS.accent : COLORS.inkDim;
-  ctx.fillText(handedness === 'left' ? 'LEFT' : 'RIGHT', w / 2, Y(0.035));
+  ctx.fillText(left ? 'L' : 'R', S(0.08), Y(0.022));
+
+  ctx.textAlign = 'right';
+  ctx.font = `700 ${Math.round(S(0.062))}px system-ui, sans-serif`;
+  ctx.fillText(left ? 'LEFT HAND' : 'RIGHT HAND', S(0.92), Y(0.055));
 
   if (!gamepad) {
+    ctx.textAlign = 'center';
     ctx.font = `500 ${Math.round(S(0.055))}px system-ui, sans-serif`;
     ctx.fillStyle = COLORS.inkDim;
     ctx.fillText('no controller yet', w / 2, Y(0.5));
@@ -104,7 +114,7 @@ export function drawController(ctx, w, h, opts) {
   // --- the body outline, so the parts sit on something recognisable ----------
   ctx.strokeStyle = BODY_LINE;
   ctx.lineWidth = 3;
-  roundRect(ctx, S(0.12), Y(0.30), S(0.76), Y(0.56), S(0.16));
+  roundRect(ctx, S(0.10), Y(0.325), S(0.80), Y(0.545), S(0.15));
   ctx.stroke();
 
   // --- analog meters: trigger and grip --------------------------------------
@@ -112,13 +122,13 @@ export function drawController(ctx, w, h, opts) {
     const s = state(id);
     const x = S(0.10);
     const width = S(0.80);
-    const height = Y(0.05);
+    const height = Y(0.048);
     const y = Y(top);
 
     ctx.font = `700 ${Math.round(S(0.048))}px system-ui, sans-serif`;
-    ctx.textAlign = mirror ? 'right' : 'left';
+    ctx.textAlign = 'left';
     ctx.fillStyle = s.label;
-    ctx.fillText(label, mirror ? x + width : x, y - Y(0.048));
+    ctx.fillText(label, x, y - Y(0.046));
 
     roundRect(ctx, x, y, width, height, height / 2);
     ctx.fillStyle = 'rgba(167, 156, 134, 0.12)';
@@ -139,13 +149,13 @@ export function drawController(ctx, w, h, opts) {
     if (isConfirmed(id)) tick(ctx, x + width - S(0.055), y + height / 2, S(0.05), COLORS.good);
   };
 
-  meter('trigger', 'Trigger', gamepad.buttons[0]?.value ?? 0, 0.19);
-  meter('grip', 'Grip', gamepad.buttons[1]?.value ?? 0, 0.30);
+  meter('trigger', 'Trigger', gamepad.buttons[0]?.value ?? 0, 0.175);
+  meter('grip', 'Grip', gamepad.buttons[1]?.value ?? 0, 0.272);
 
   // --- thumbstick, with a direction arrow per check -------------------------
-  const cx = X(0.40);
-  const cy = Y(0.585);
-  const radius = S(0.155);
+  const cx = X(0.35);
+  const cy = Y(0.525);
+  const radius = S(0.135);
 
   const clickState = state('stickClick');
   ctx.beginPath();
@@ -163,17 +173,15 @@ export function drawController(ctx, w, h, opts) {
     stickRight: [1, 0],
   };
 
+  // Directions are never mirrored: left is left on both hands.
   for (const [id, [dx, dy]] of Object.entries(ARROWS)) {
     const s = state(id);
-    const distance = radius * 1.5;
-    // The arrow sits where the stick must be pushed, mirrored with the layout.
-    const ax = cx + dx * distance * (mirror ? -1 : 1);
-    const ay = cy + dy * distance;
-    const size = S(0.052);
+    const distance = radius * 1.52;
+    const size = S(0.05);
 
     ctx.save();
-    ctx.translate(ax, ay);
-    ctx.rotate(Math.atan2(dy, dx * (mirror ? -1 : 1)) + Math.PI / 2);
+    ctx.translate(cx + dx * distance, cy + dy * distance);
+    ctx.rotate(Math.atan2(dy, dx) + Math.PI / 2);
     ctx.beginPath();
     ctx.moveTo(0, -size);
     ctx.lineTo(size * 0.85, size * 0.7);
@@ -189,17 +197,15 @@ export function drawController(ctx, w, h, opts) {
 
   // The live dot: where the stick actually is, right now.
   const { x: sx, y: sy } = thumbstick(gamepad);
-  const dotX = cx + sx * radius * 0.62 * (mirror ? -1 : 1);
-  const dotY = cy + sy * radius * 0.62;
   ctx.beginPath();
-  ctx.arc(dotX, dotY, radius * 0.3, 0, Math.PI * 2);
+  ctx.arc(cx + sx * radius * 0.62, cy + sy * radius * 0.62, radius * 0.3, 0, Math.PI * 2);
   ctx.fillStyle = Math.hypot(sx, sy) > 0.15 ? COLORS.accent : COLORS.inkDim;
   ctx.fill();
 
-  ctx.font = `600 ${Math.round(S(0.042))}px system-ui, sans-serif`;
+  ctx.font = `600 ${Math.round(S(0.04))}px system-ui, sans-serif`;
   ctx.textAlign = 'center';
   ctx.fillStyle = state('stickClick').label;
-  ctx.fillText('press to click', cx, cy + radius * 1.8);
+  ctx.fillText('press to click', cx, cy + radius * 1.95);
 
   // --- the two round face buttons -------------------------------------------
   const faceButton = (id, u, v) => {
@@ -223,26 +229,35 @@ export function drawController(ctx, w, h, opts) {
     ctx.textBaseline = 'top';
   };
 
-  faceButton('upper', 0.775, 0.50);
-  faceButton('lower', 0.715, 0.665);
+  faceButton('upper', 0.745, 0.462);
+  faceButton('lower', 0.745, 0.625);
 
-  // --- the button the headset keeps -----------------------------------------
-  const sysY = Y(0.875);
-  ctx.beginPath();
-  ctx.arc(X(0.40), sysY, S(0.042), 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(167, 156, 134, 0.10)';
+  // --- the button this page never sees --------------------------------------
+  // Drawn as a plainly-labelled strip rather than a dot placed from guesswork:
+  // where it sits varies by controller, and a confidently wrong position is
+  // worse than an honest label.
+  const stripY = Y(0.772);
+  const stripH = Y(0.08);
+  ctx.save();
+  ctx.setLineDash([S(0.028), S(0.022)]);
+  roundRect(ctx, S(0.10), stripY, S(0.80), stripH, stripH / 2);
+  ctx.fillStyle = 'rgba(167, 156, 134, 0.07)';
   ctx.fill();
-  ctx.setLineDash([S(0.03), S(0.025)]);
   ctx.lineWidth = 3;
-  ctx.strokeStyle = 'rgba(167, 156, 134, 0.5)';
+  ctx.strokeStyle = 'rgba(167, 156, 134, 0.55)';
   ctx.stroke();
-  ctx.setLineDash([]);
+  ctx.restore();
 
-  ctx.font = `500 ${Math.round(S(0.036))}px system-ui, sans-serif`;
   ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `800 ${Math.round(S(0.05))}px system-ui, sans-serif`;
   ctx.fillStyle = COLORS.inkDim;
-  ctx.fillText(handedness === 'left' ? 'Menu — the headset' : 'Meta — the headset', w / 2, Y(0.925));
-  ctx.fillText('keeps this one', w / 2, Y(0.962));
+  ctx.fillText(left ? '\u2261  Menu button' : '\u25CB  Meta button', w / 2, stripY + stripH / 2);
+  ctx.textBaseline = 'top';
+
+  ctx.font = `500 ${Math.round(S(0.038))}px system-ui, sans-serif`;
+  ctx.fillText('below the others — the headset', w / 2, Y(0.878));
+  ctx.fillText('keeps this one to itself', w / 2, Y(0.918));
 }
 
 /** The diagram as a panel in the world. */

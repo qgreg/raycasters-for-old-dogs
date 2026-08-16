@@ -9,7 +9,7 @@ const n = (v, digits = 2) => (typeof v === 'number' ? v.toFixed(digits) : '—')
  * ray is pointing and what it hit.
  */
 export class Diagnostics {
-  constructor(renderer, pointers, { width = 1.15, height = 1.35 } = {}) {
+  constructor(renderer, pointers, { width = 1.15, height = 1.42 } = {}) {
     this.renderer = renderer;
     this.pointers = pointers;
     this.panel = new Panel({ width, height, pxPerMeter: 620 });
@@ -72,7 +72,6 @@ export class Diagnostics {
         // The reported profile is the ground truth for which controller layout
         // this actually is — worth showing rather than assuming.
         if (profile) rows.push([`${tag} layout`, shorten(profile)]);
-        rows.push([`${tag} mode`, source.targetRayMode + (pointer.isHand ? ' (hand)' : '')]);
 
         const pad = source.gamepad;
         if (pad) {
@@ -104,8 +103,6 @@ export class Diagnostics {
         rows.push([`${tag} pointer`, 'mouse ray']);
       }
 
-      const d = pointer.raycaster.ray.direction;
-      rows.push([`${tag} dir`, `${n(d.x, 2)} ${n(d.y, 2)} ${n(d.z, 2)}`]);
       rows.push([`${tag} hit`, pointer.hovered ? `${n(pointer.hitDistance, 2)} m` : 'nothing',
         pointer.hovered ? COLORS.good : COLORS.inkDim]);
       rows.push(['', '']);

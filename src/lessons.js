@@ -99,27 +99,57 @@ export const LESSONS = [
   {
     id: 'system',
     title: `Lesson 5 of ${TOTAL}`,
-    instruction: 'One button on each controller belongs to the headset\nrather than to this page.',
-    footer: 'The Meta button on the right, the Menu button on the left.',
+    instruction: 'Two buttons are left, one on each controller.\nThey belong to the headset rather than to this page.',
+    footer: '',
     needsHeadset: true,
     showHands: true,
     start(ctx) {
-      this.baseline = ctx.systemTrips;
-      this.returnedAt = 0;
+      this.stage = 0;
+      this.trips = ctx.systemTrips;
+      this.unmapped = ctx.unmappedCount;
+      this.stageStarted = performance.now();
+      this.settledAt = 0;
       ctx.say({
-        instruction: 'Press the round Meta button below your right thumb.\nEverything here will vanish. That is meant to happen.',
-        footer: 'Then press it once more to come back.',
+        instruction: 'On your RIGHT controller, below the round buttons,\npress the Meta button.',
+        footer: 'Everything here will vanish. That is meant to happen — press it again to come back.',
       });
     },
     update(dt, ctx) {
-      if (ctx.systemTrips <= this.baseline) return;
-      ctx.say({
-        instruction: 'And there you are again.\nThat is how you get back from anywhere.',
-        footer: 'Nothing on that menu can break this page.',
-      });
-      // A beat, so the sentence can be read before the lesson turns over.
-      if (!this.returnedAt) this.returnedAt = performance.now();
-      if (performance.now() - this.returnedAt > 2600) ctx.done();
+      // Stage one: the Meta button, which always takes the session away.
+      if (this.stage === 0) {
+        if (ctx.systemTrips <= this.trips) return;
+        this.stage = 1;
+        this.trips = ctx.systemTrips;
+        this.unmapped = ctx.unmappedCount;
+        this.stageStarted = performance.now();
+        ctx.say({
+          instruction: 'And there you are again. That is how you get back from anywhere.\n\nNow the LEFT controller: the button marked with three little lines.',
+          footer: 'Press it and watch what happens — either answer is a fine one.',
+        });
+        return;
+      }
+
+      // Stage two: the Menu button. Whether a web page can see it at all
+      // depends on the headset, so this measures rather than assumes — a
+      // session blur or a button index we do not recognise both count as
+      // "something reached us".
+      const reached = ctx.systemTrips > this.trips || ctx.unmappedCount > this.unmapped;
+      const waitedLongEnough = performance.now() - this.stageStarted > 9000;
+      if (!reached && !waitedLongEnough) return;
+
+      if (!this.settledAt) {
+        this.settledAt = performance.now();
+        ctx.say(reached
+          ? {
+              instruction: 'That one reached us.\nNow you know where both of them are.',
+              footer: 'Noted on the board as well.',
+            }
+          : {
+              instruction: 'Nothing reached us from that one — which is the usual answer.\nThe headset keeps it for itself.',
+              footer: 'It is still worth knowing where it is, so it never surprises you.',
+            });
+      }
+      if (performance.now() - this.settledAt > 3400) ctx.done();
     },
     onMiss() {},
   },

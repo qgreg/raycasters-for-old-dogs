@@ -68,8 +68,8 @@ instructionPanel.rotation.x = 0.24;
 scene.add(instructionPanel);
 
 const statsPanel = new Panel({ width: 1.0, height: 0.9, pxPerMeter: 620 });
-statsPanel.position.set(-1.32, 1.45, -1.72);
-statsPanel.rotation.y = 0.6;
+statsPanel.position.set(-1.42, 1.68, -1.62);
+statsPanel.rotation.y = 0.72;
 scene.add(statsPanel);
 
 // A live picture of each controller, placed roughly where that hand is.
@@ -77,10 +77,10 @@ const diagrams = {
   left: new ControllerDiagram('left'),
   right: new ControllerDiagram('right'),
 };
-diagrams.left.object3D.position.set(-0.86, 1.52, -1.5);
-diagrams.left.object3D.rotation.y = 0.42;
-diagrams.right.object3D.position.set(0.86, 1.52, -1.5);
-diagrams.right.object3D.rotation.y = -0.42;
+diagrams.left.object3D.position.set(-1.02, 1.52, -1.32);
+diagrams.left.object3D.rotation.y = 0.78;
+diagrams.right.object3D.position.set(1.02, 1.52, -1.32);
+diagrams.right.object3D.rotation.y = -0.78;
 scene.add(diagrams.left.object3D, diagrams.right.object3D);
 
 // The hand pictures and the side boards want the same space either side of the
@@ -105,8 +105,9 @@ function setHandsVisible(visible) {
 
 const pointers = new Pointers(renderer, scene, camera, { isDragging: () => look.didDrag });
 const diagnostics = new Diagnostics(renderer, pointers);
-diagnostics.object3D.position.set(1.35, 1.5, -1.72);
-diagnostics.object3D.rotation.y = -0.6;
+// Sits high enough that the button row in front cannot cover its lower rows.
+diagnostics.object3D.position.set(1.42, 1.82, -1.62);
+diagnostics.object3D.rotation.y = -0.72;
 scene.add(diagnostics.object3D);
 
 const buttons = [
@@ -188,6 +189,8 @@ const ctx = {
 
   // --- system buttons, which WebXR never sees pressed
   get systemTrips() { return systemTrips; },
+  // If a runtime does surface a system button at some index, it lands here.
+  get unmappedCount() { return controllerCheck.unmapped.size; },
 };
 
 const controllerCheck = new ControllerCheck();

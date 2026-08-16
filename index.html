@@ -94,9 +94,10 @@
           <div class="mark__icon" aria-hidden="true">🚪</div>
           <div>
             <span class="mark__label">The way out</span>
-            <p>The two buttons below the face belong to the headset, not to this page. Pressing one
-              makes everything vanish &mdash; <strong>that is not a mistake, and pressing it again brings you
-              back</strong>. The last lesson has you do it once on purpose, so it never comes as a surprise.</p>
+            <p>Two buttons belong to the headset, not to this page: <strong>Meta</strong> on the right and
+              <strong>Menu</strong> (marked with three little lines) on the left. Pressing Meta makes everything
+              vanish &mdash; <strong>that is not a mistake, and pressing it again brings you back</strong>.
+              Lesson 5 has you do both on purpose, so neither ever comes as a surprise.</p>
           </div>
         </li>
         <li class="mark">
@@ -126,7 +127,8 @@
           <li>Each thumbstick direction is checked separately. A stick that only travels one way will not pass &mdash; which is the point.</li>
           <li>The pointing lessons start at lesson 6. Lesson 6 finishes on a steady hold rather than a button press; if holding still is the hard part, that timer is in <strong>src/lessons.js</strong>.</li>
           <li>The hand pictures and the diagnostics board share the space either side, so they take turns &mdash; the <strong>Hands</strong> and <strong>Board</strong> buttons swap between them.</li>
-          <li>The Meta and Menu buttons cannot be read by any web page &mdash; the headset keeps them for itself. They are verified instead by watching the session get taken away and handed back, which is the counter marked <strong>trips away</strong> on the board.</li>
+          <li>The Meta button cannot be read by any web page &mdash; the headset keeps it. It is verified instead by watching the session get taken away and handed back, which is the counter marked <strong>trips away</strong> on the board.</li>
+          <li>The Menu button is not in the WebXR controller profile either, so lesson 5 <em>measures</em> rather than assumes: it watches for a session blur or for a button index we do not recognise, and reports honestly whether anything arrived. On most headsets nothing does, and the lesson says so.</li>
           <li>The board reports the controller <strong>layout</strong> exactly as the headset names it, and lists any button it reports that we did not expect. If a headset turns up with a different arrangement, it says so rather than quietly missing it.</li>
         </ul>
       </details>
