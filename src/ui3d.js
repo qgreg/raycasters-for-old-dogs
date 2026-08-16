@@ -73,7 +73,7 @@ export class Panel extends THREE.Mesh {
     this.renderOrder = 1;
   }
 
-  get pad() { return Math.round(this.canvas.width * 0.045); }
+  get pad() { return Math.round(this.canvas.width * 0.038); }
 
   background(fill = COLORS.panel, edge = COLORS.panelEdge) {
     const { ctx, canvas } = this;
@@ -194,6 +194,104 @@ export class Panel extends THREE.Mesh {
       }
       y += lineHeight;
     }
+
+    this.texture.needsUpdate = true;
+  }
+
+  /**
+   * A two-column board: a wide header of paired readings, then one column per
+   * hand. Stacking everything in a single column forced the type down to keep
+   * it all on screen; splitting the per-hand readings side by side halves the
+   * line count and roughly doubles the readable size for the same content.
+   *
+   *   header  - [[label, value, color], ...] laid out two per line
+   *   columns - [{ heading, rows: [[label, value, color], ...] }, ...]
+   */
+  board({ title = '', subtitle = '', header = [], columns = [] } = {}) {
+    const { ctx, canvas } = this;
+    const pad = this.pad;
+    this.background();
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+
+    let y = pad;
+    if (title) {
+      const size = Math.round(canvas.width * 0.046);
+      ctx.font = `700 ${size}px system-ui, sans-serif`;
+      ctx.fillStyle = COLORS.accent;
+      ctx.fillText(title.toUpperCase(), pad, y);
+      y += size * 1.25;
+    }
+    if (subtitle) {
+      const size = Math.round(canvas.width * 0.03);
+      ctx.font = `400 ${size}px system-ui, sans-serif`;
+      ctx.fillStyle = COLORS.inkDim;
+      ctx.fillText(subtitle, pad, y);
+      y += size * 1.8;
+    }
+
+    const headerLines = Math.ceil(header.length / 2);
+    const columnRows = columns.length ? Math.max(...columns.map((c) => c.rows.length)) : 0;
+    const lines = headerLines + (columns.length ? columnRows + 1 : 0);
+    const availableH = canvas.height - y - pad;
+    const cellW = (canvas.width - pad * 2) / 2;
+    const gutter = pad * 0.5;
+
+    // Fit on both axes: enough vertical room for every line, and enough width
+    // for the longest label+value pair in its own half.
+    const pairs = [...header, ...columns.flatMap((c) => c.rows)];
+    const fits = (size) => {
+      if (lines * size * 1.5 + size > availableH) return false;
+      ctx.font = `500 ${size}px ui-monospace, "SF Mono", Menlo, monospace`;
+      return pairs.every(([label, value]) =>
+        ctx.measureText(label).width + ctx.measureText(String(value ?? '')).width + size * 1.1
+          <= cellW - gutter);
+    };
+
+    let size = Math.round(canvas.width * 0.05);
+    const floor = Math.round(canvas.width * 0.024);
+    while (size > floor && !fits(size)) size = Math.round(size * 0.95);
+    const lineHeight = size * 1.5;
+
+    const cell = (index) => pad + (index % 2) * cellW;
+    const drawPair = ([label, value, color], x, top) => {
+      ctx.font = `500 ${size}px ui-monospace, "SF Mono", Menlo, monospace`;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = COLORS.inkDim;
+      ctx.fillText(label, x, top);
+      if (value !== '' && value != null) {
+        ctx.textAlign = 'right';
+        ctx.fillStyle = color || COLORS.ink;
+        ctx.fillText(String(value), x + cellW - gutter, top);
+      }
+    };
+
+    header.forEach((row, i) => drawPair(row, cell(i), y + Math.floor(i / 2) * lineHeight));
+    y += headerLines * lineHeight;
+
+    if (!columns.length) {
+      this.texture.needsUpdate = true;
+      return;
+    }
+
+    // A rule between the shared readings and the per-hand ones.
+    y += size * 0.45;
+    ctx.strokeStyle = 'rgba(167, 156, 134, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(pad, y);
+    ctx.lineTo(canvas.width - pad, y);
+    ctx.stroke();
+    y += size * 0.5;
+
+    columns.forEach((column, i) => {
+      const x = cell(i);
+      ctx.font = `700 ${size}px system-ui, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = COLORS.accent;
+      ctx.fillText(column.heading, x, y);
+      column.rows.forEach((row, r) => drawPair(row, x, y + (r + 1) * lineHeight));
+    });
 
     this.texture.needsUpdate = true;
   }

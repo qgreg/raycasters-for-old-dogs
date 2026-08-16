@@ -106,8 +106,8 @@ function setHandsVisible(visible) {
 const pointers = new Pointers(renderer, scene, camera, { isDragging: () => look.didDrag });
 const diagnostics = new Diagnostics(renderer, pointers);
 // Sits high enough that the button row in front cannot cover its lower rows.
-diagnostics.object3D.position.set(1.42, 1.82, -1.62);
-diagnostics.object3D.rotation.y = -0.72;
+diagnostics.object3D.position.set(1.6, 1.86, -1.34);
+diagnostics.object3D.rotation.y = -0.85;
 scene.add(diagnostics.object3D);
 
 const buttons = [
