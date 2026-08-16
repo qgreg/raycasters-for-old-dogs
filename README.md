@@ -117,10 +117,21 @@ profile.** The xr-standard mapping Meta publishes for Touch covers trigger,
 squeeze, thumbstick, the two face buttons and a thumbrest — and stops there. The
 runtime consumes the rest, so no `gamepad.buttons[]` entry ever reports them.
 
-The Meta button is verified by consequence: pressing it blurs the immersive
-session, so `XRSession.visibilityState` leaves `visible` and a
-`visibilitychange` event fires; coming back flips it home. That round trip is
-counted and shown as **trips away** on the board. It is also the thing a
+The Meta button is verified by consequence, and there are two consequences worth
+watching. Usually it blurs the session — `XRSession.visibilityState` leaves
+`visible`, a `visibilitychange` event fires, and returning flips it home. But on
+some headsets it **ends** the session outright and drops the player back to the
+page. That is the same journey from where the player is standing, so a session
+that ends and is re-entered counts as a trip too. Without that, the lesson waits
+forever for an event that already happened.
+
+And it may do neither. Every stage of the lesson is therefore time-boxed: if
+nothing observable arrives within twenty seconds, it says so kindly and moves
+on, having halfway through offered **Skip** as a way out. A teaching step must
+never depend on an event the hardware might not produce — `stageOutcome` is a
+pure function precisely so a test can assert that no stage can wait forever.
+
+Round trips are counted and shown as **trips away** on the board. It is also the thing a
 beginner most needs to rehearse — everything vanishing is not a mistake, and the
 same button brings it back.
 

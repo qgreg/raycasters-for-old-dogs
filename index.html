@@ -97,7 +97,9 @@
             <p>Two buttons belong to the headset, not to this page: <strong>Meta</strong> on the right and
               <strong>Menu</strong> (marked with three little lines) on the left. Pressing Meta makes everything
               vanish &mdash; <strong>that is not a mistake, and pressing it again brings you back</strong>.
-              Lesson 5 has you do both on purpose, so neither ever comes as a surprise.</p>
+              Lesson 5 has you do both on purpose, so neither ever comes as a surprise. If pressing it
+              drops you back to this page, just press start again &mdash; you carry on exactly where you
+              left off.</p>
           </div>
         </li>
         <li class="mark">
@@ -129,6 +131,7 @@
           <li>The hand pictures and the diagnostics board share the space either side, so they take turns &mdash; the <strong>Hands</strong> and <strong>Board</strong> buttons swap between them.</li>
           <li>The Meta button cannot be read by any web page &mdash; the headset keeps it. It is verified instead by watching the session get taken away and handed back, which is the counter marked <strong>trips away</strong> on the board.</li>
           <li>The Menu button is not in the WebXR controller profile either, so lesson 5 <em>measures</em> rather than assumes: it watches for a session blur or for a button index we do not recognise, and reports honestly whether anything arrived. On most headsets nothing does, and the lesson says so.</li>
+          <li>Pressing Meta may blur the session or end it outright, depending on the headset. Both count as the same journey, so leaving and coming back through the start button advances the lesson either way. And if neither happens, the lesson moves on by itself after twenty seconds rather than waiting for something that may never arrive.</li>
           <li>The board reports the controller <strong>layout</strong> exactly as the headset names it, and lists any button it reports that we did not expect. If a headset turns up with a different arrangement, it says so rather than quietly missing it.</li>
         </ul>
       </details>

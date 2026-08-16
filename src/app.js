@@ -201,6 +201,12 @@ const controllerCheck = new ControllerCheck();
 // the thing actually worth teaching: how to get out, and how to get back.
 let systemTrips = 0;
 let sessionAway = false;
+// Some headsets do not merely blur the session when the Meta button is pressed
+// — they end it outright and drop the player back to the browser. That is the
+// same journey from the player's side, so a session that ends and is re-entered
+// counts as a trip too. Without this the lesson waits forever for an event that
+// already happened.
+let leftBySessionEnd = false;
 
 function watchSystemButtons(session) {
   session.addEventListener('visibilitychange', () => {
@@ -509,12 +515,19 @@ async function enterVR() {
       optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking', 'layers'],
     });
     session.addEventListener('end', () => {
+      leftBySessionEnd = true;
+      sessionAway = false;
       overlay.hidden = false;
       if (hintEl) hintEl.hidden = true;
-      setStatus('You left VR. Put the headset back on and press start whenever you like.', 'ok');
+      setStatus('You are back on the page. Press start to go in again — you will pick up exactly where you left off.', 'ok');
     });
     watchSystemButtons(session);
     await renderer.xr.setSession(session);
+    // Coming back after the session ended is the far half of a trip away.
+    if (leftBySessionEnd) {
+      leftBySessionEnd = false;
+      systemTrips++;
+    }
     overlay.hidden = true;
     beginIfNeeded();
   } catch (error) {

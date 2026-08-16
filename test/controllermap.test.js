@@ -7,6 +7,7 @@
  * right for a hardware check to mean anything.
  */
 import { ControllerCheck, CHECKS, GROUPS, checkById, labelFor, thumbstick, isLive } from '../src/controllermap.js';
+import { stageOutcome, META_PATIENCE, MENU_PATIENCE } from '../src/lessons.js';
 
 const failures = [];
 function check(label, condition, detail = '') {
@@ -168,6 +169,25 @@ check('a light nudge counts for nothing', !isLive(checkById('stickRight'), stick
   check('a gamepad-less input source is ignored safely', c.handsSeen.size === 0);
   check('a missing gamepad is never "live"', !isLive(checkById('trigger'), null));
 }
+
+// --- the system-button lesson always resolves ---------------------------------
+// Pressing Meta may blur the session, end it outright, or do nothing a web page
+// can see. The lesson has to finish in every one of those cases — a stage that
+// waits forever strands the player with no way forward.
+
+check('a detected trip resolves at once',
+  stageOutcome({ reached: true, waited: 0, patience: META_PATIENCE }) === 'reached');
+check('an undetected press still resolves once patience runs out',
+  stageOutcome({ reached: false, waited: META_PATIENCE, patience: META_PATIENCE }) === 'timeout');
+check('and it waits until then',
+  stageOutcome({ reached: false, waited: META_PATIENCE - 1, patience: META_PATIENCE }) === 'waiting');
+check('the menu stage resolves on its own too',
+  stageOutcome({ reached: false, waited: MENU_PATIENCE, patience: MENU_PATIENCE }) === 'timeout');
+check('no stage can wait forever',
+  [META_PATIENCE, MENU_PATIENCE].every((patience) =>
+    stageOutcome({ reached: false, waited: patience + 1, patience }) !== 'waiting'));
+check('a trip beats the clock even at zero patience',
+  stageOutcome({ reached: true, waited: 0, patience: 0 }) === 'reached');
 
 console.log(failures.length ? `\n${failures.length} failing check(s)` : '\nall controller checks passed');
 process.exit(failures.length ? 1 : 0);

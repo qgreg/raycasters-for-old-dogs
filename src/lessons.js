@@ -18,6 +18,22 @@ import { GROUPS } from './controllermap.js';
 const HOLD_MS = 1200;
 const TOTAL = 10;
 
+// How long the system-button lesson waits before moving on by itself.
+export const META_PATIENCE = 20000;
+export const MENU_PATIENCE = 9000;
+
+/**
+ * How a system-button stage should resolve. Pressing Meta may blur the session,
+ * end it, or — depending on the headset — produce nothing a web page can see.
+ * The lesson must finish in every one of those cases, so this never returns
+ * 'waiting' once the patience has run out.
+ */
+export function stageOutcome({ reached, waited, patience }) {
+  if (reached) return 'reached';
+  if (waited >= patience) return 'timeout';
+  return 'waiting';
+}
+
 /**
  * The controller lessons share a shape: ask for one control at a time, on
  * alternating hands, and finish when every control in the group is confirmed on
@@ -109,37 +125,56 @@ export const LESSONS = [
       this.unmapped = ctx.unmappedCount;
       this.stageStarted = performance.now();
       this.settledAt = 0;
+      this.nudged = false;
       ctx.say({
         instruction: 'On your RIGHT controller, below the round buttons,\npress the Meta button.',
-        footer: 'Everything here will vanish. That is meant to happen — press it again to come back.',
+        footer: 'Everything here will vanish. That is meant to happen.',
       });
     },
     update(dt, ctx) {
-      // Stage one: the Meta button, which always takes the session away.
+      const waited = performance.now() - this.stageStarted;
+      const reached = ctx.systemTrips > this.trips || ctx.unmappedCount > this.unmapped;
+
+      // Stage one: the Meta button. It may blur the session, or end it and drop
+      // the player back to the page — both are counted as a trip. It may also
+      // do neither, so the stage resolves on its own rather than waiting for an
+      // event that might never arrive.
       if (this.stage === 0) {
-        if (ctx.systemTrips <= this.trips) return;
+        const outcome = stageOutcome({ reached, waited, patience: META_PATIENCE });
+        if (outcome === 'waiting') {
+          // Halfway through the wait, say how to move on without it.
+          if (!this.nudged && waited > META_PATIENCE / 2) {
+            this.nudged = true;
+            ctx.say({ footer: 'No hurry. If nothing happens, point at Skip below and carry on.' });
+          }
+          return;
+        }
+
         this.stage = 1;
         this.trips = ctx.systemTrips;
         this.unmapped = ctx.unmappedCount;
         this.stageStarted = performance.now();
-        ctx.say({
-          instruction: 'And there you are again. That is how you get back from anywhere.\n\nNow the LEFT controller: the button marked with three little lines.',
-          footer: 'Press it and watch what happens — either answer is a fine one.',
-        });
+        this.nudged = false;
+        ctx.say(outcome === 'reached'
+          ? {
+              instruction: 'And there you are again.\nThat is how you get back from anywhere.\n\nNow the LEFT controller: the button marked with three little lines.',
+              footer: 'Press it and watch what happens — either answer is a fine one.',
+            }
+          : {
+              instruction: 'We did not see that one happen, which is quite all right.\n\nNow the LEFT controller: the button marked with three little lines.',
+              footer: 'Press it and watch what happens — either answer is a fine one.',
+            });
         return;
       }
 
       // Stage two: the Menu button. Whether a web page can see it at all
-      // depends on the headset, so this measures rather than assumes — a
-      // session blur or a button index we do not recognise both count as
-      // "something reached us".
-      const reached = ctx.systemTrips > this.trips || ctx.unmappedCount > this.unmapped;
-      const waitedLongEnough = performance.now() - this.stageStarted > 9000;
-      if (!reached && !waitedLongEnough) return;
+      // depends on the headset, so this measures rather than assumes.
+      const outcome = stageOutcome({ reached, waited, patience: MENU_PATIENCE });
+      if (outcome === 'waiting') return;
 
       if (!this.settledAt) {
         this.settledAt = performance.now();
-        ctx.say(reached
+        ctx.say(outcome === 'reached'
           ? {
               instruction: 'That one reached us.\nNow you know where both of them are.',
               footer: 'Noted on the board as well.',
