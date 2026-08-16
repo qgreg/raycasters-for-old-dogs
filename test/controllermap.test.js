@@ -1,12 +1,12 @@
 /**
  * Unit tests for the controller check.
  *
- * A headless browser cannot squeeze a real trigger, so the logic that decides
- * "this control has been proven to work" is tested here against synthetic
- * gamepads instead. This is the part that has to be right for a hardware check
- * to mean anything.
+ * A headless browser cannot squeeze a real trigger or push a real thumbstick,
+ * so the logic that decides "this control has been proven to work" is tested
+ * here against synthetic gamepads instead. This is the part that has to be
+ * right for a hardware check to mean anything.
  */
-import { ControllerCheck, CHECKS, labelFor, thumbstick } from '../src/controllermap.js';
+import { ControllerCheck, CHECKS, GROUPS, checkById, labelFor, thumbstick, isLive } from '../src/controllermap.js';
 
 const failures = [];
 function check(label, condition, detail = '') {
@@ -27,16 +27,16 @@ function gamepad({ buttons = {}, axes = [0, 0, 0, 0] } = {}) {
   };
 }
 
+const stick = (x, y) => gamepad({ axes: [0, 0, x, y] });
 const source = (handedness, pad) => ({ handedness, gamepad: pad, profiles: ['meta-quest-touch-plus'] });
+const ALL = CHECKS.map((c) => c.id);
 
 // --- naming ------------------------------------------------------------------
 
-const lower = CHECKS.find((c) => c.id === 'lower');
-const upper = CHECKS.find((c) => c.id === 'upper');
-check('lower button is A on the right', labelFor(lower, 'right') === 'A button');
-check('lower button is X on the left', labelFor(lower, 'left') === 'X button');
-check('upper button is B on the right', labelFor(upper, 'right') === 'B button');
-check('upper button is Y on the left', labelFor(upper, 'left') === 'Y button');
+check('lower button is A on the right', labelFor(checkById('lower'), 'right') === 'A button');
+check('lower button is X on the left', labelFor(checkById('lower'), 'left') === 'X button');
+check('upper button is B on the right', labelFor(checkById('upper'), 'right') === 'B button');
+check('upper button is Y on the left', labelFor(checkById('upper'), 'left') === 'Y button');
 
 // --- thumbstick axes ---------------------------------------------------------
 
@@ -44,6 +44,35 @@ check('stick reads axes 2 and 3 on Touch',
   (() => { const { x, y } = thumbstick(gamepad({ axes: [0.9, 0.9, -0.5, 0.25] })); return x === -0.5 && y === 0.25; })());
 check('stick falls back to axes 0 and 1',
   (() => { const { x, y } = thumbstick({ axes: [0.3, -0.7] }); return x === 0.3 && y === -0.7; })());
+
+// --- each stick direction is its own control ---------------------------------
+
+check('four stick directions are checked separately',
+  GROUPS.stick.filter((id) => id.startsWith('stick') && id !== 'stickClick').length === 4);
+
+check('pushing forward fires only forward',
+  isLive(checkById('stickUp'), stick(0, -0.9)) &&
+  !isLive(checkById('stickDown'), stick(0, -0.9)) &&
+  !isLive(checkById('stickLeft'), stick(0, -0.9)) &&
+  !isLive(checkById('stickRight'), stick(0, -0.9)));
+
+check('pulling back fires only back', isLive(checkById('stickDown'), stick(0, 0.9)) && !isLive(checkById('stickUp'), stick(0, 0.9)));
+check('left fires only left', isLive(checkById('stickLeft'), stick(-0.9, 0)) && !isLive(checkById('stickRight'), stick(-0.9, 0)));
+check('right fires only right', isLive(checkById('stickRight'), stick(0.9, 0)) && !isLive(checkById('stickLeft'), stick(0.9, 0)));
+check('a diagonal counts for both of its directions',
+  isLive(checkById('stickUp'), stick(0.8, -0.8)) && isLive(checkById('stickRight'), stick(0.8, -0.8)));
+check('a light nudge counts for nothing', !isLive(checkById('stickRight'), stick(0.3, 0)));
+
+{
+  // The whole point of splitting the directions: a stick that only travels one
+  // way must not pass.
+  const c = new ControllerCheck();
+  c.setFocus(GROUPS.stick);
+  for (let i = 0; i < 5; i++) c.poll([source('right', stick(0, -1))]);
+  check('a stick stuck on one axis does not complete the group', !c.complete);
+  check('and the missing direction is what is asked for next',
+    ['stickDown', 'stickLeft', 'stickRight'].includes(c.next()?.check.id), c.next()?.check.id);
+}
 
 // --- confirming controls -----------------------------------------------------
 
@@ -57,52 +86,69 @@ check('stick falls back to axes 0 and 1',
 
 {
   const c = new ControllerCheck();
-  // An analog trigger held halfway should not count as a press.
   c.poll([source('right', gamepad({ buttons: { 0: { value: 0.4 } } }))]);
-  check('a half-squeezed trigger does not count', !c.isDone('right', CHECKS[0]));
+  check('a half-squeezed trigger does not count', !c.isDone('right', checkById('trigger')));
   c.poll([source('right', gamepad({ buttons: { 0: { value: 0.85 } } }))]);
-  check('a firm squeeze counts', c.isDone('right', CHECKS[0]));
+  check('a firm squeeze counts', c.isDone('right', checkById('trigger')));
 }
+
+// --- focus, so one lesson asks for one group ---------------------------------
 
 {
   const c = new ControllerCheck();
-  c.poll([source('right', gamepad({ axes: [0, 0, 0.2, 0.1] }))]);
-  check('a nudged thumbstick does not count', !c.isDone('right', CHECKS[2]));
-  c.poll([source('right', gamepad({ axes: [0, 0, 0.8, 0.2] }))]);
-  check('a pushed thumbstick counts', c.isDone('right', CHECKS[2]));
-}
+  c.setFocus(GROUPS.trigger);
+  c.poll([source('right', gamepad()), source('left', gamepad())]);
+  check('a focused group counts only its own controls', c.counts.total === 2, `total=${c.counts.total}`);
 
-{
-  const c = new ControllerCheck();
-  const press = (hand, index) => c.poll([source(hand, gamepad({ buttons: { [index]: { pressed: true } } }))]);
-  // Exercise everything on the right hand only.
   c.poll([source('right', gamepad({ buttons: { 0: { value: 1 } } }))]);
-  c.poll([source('right', gamepad({ buttons: { 1: { value: 1 } } }))]);
-  c.poll([source('right', gamepad({ axes: [0, 0, 1, 0] }))]);
-  press('right', 3);
-  press('right', 4);
-  press('right', 5);
-  check('every right-hand control confirmed', c.counts.done === CHECKS.length, `${c.counts.done}/${CHECKS.length}`);
-  check('one confirmed controller completes the check', c.complete);
+  check('one hand done does not finish the group', !c.complete);
+  check('the other hand is asked for next', c.next()?.hand === 'left');
 
-  // A second controller appearing reopens the check for that hand.
-  c.poll([source('left', gamepad())]);
-  check('a newly seen left hand reopens it', !c.complete);
-  check('and it is suggested next', c.next()?.hand === 'left');
+  c.poll([source('left', gamepad({ buttons: { 0: { value: 1 } } }))]);
+  check('both hands done finishes the group', c.complete);
+
+  // Widening the focus reopens work without losing what was already proven.
+  c.setFocus(GROUPS.grip);
+  check('switching group reopens the check', !c.complete);
+  check('and the earlier triggers stay confirmed', c.isDone('right', checkById('trigger')) && c.isDone('left', checkById('trigger')));
+}
+
+{
+  const c = new ControllerCheck();
+  c.setFocus(ALL);
+  c.poll([source('right', gamepad()), source('left', gamepad())]);
+  check('both hands are tracked at once', c.counts.total === CHECKS.length * 2);
+
+  // Alternating hands means neither controller gets finished and forgotten.
+  const first = c.next();
+  c.confirmed[first.hand][first.check.id] = true;
+  const second = c.next();
+  check('the same control is asked of the other hand next',
+    second.check.id === first.check.id && second.hand !== first.hand);
 }
 
 {
   const c = new ControllerCheck();
   c.poll([source('right', gamepad())]);
-  const suggestions = [];
+  const asked = [];
   for (let i = 0; i < CHECKS.length; i++) {
     const next = c.next();
-    suggestions.push(next.check.id);
-    // Confirm whatever was asked for, so the next call moves on.
+    asked.push(next.check.id);
     c.confirmed[next.hand][next.check.id] = true;
   }
-  check('suggests each control exactly once', new Set(suggestions).size === CHECKS.length);
+  check('suggests each control exactly once', new Set(asked).size === CHECKS.length);
   check('and stops suggesting when done', c.next() === null);
+}
+
+// --- what the diagram highlights ---------------------------------------------
+
+{
+  const c = new ControllerCheck();
+  c.setFocus(GROUPS.trigger);
+  c.poll([source('right', gamepad()), source('left', gamepad())]);
+  const wanted = c.next();
+  check('the diagram highlights only the hand being asked',
+    c.wantedFor(wanted.hand)?.id === 'trigger' && c.wantedFor(wanted.hand === 'left' ? 'right' : 'left') === null);
 }
 
 // --- unfamiliar hardware -----------------------------------------------------
@@ -120,6 +166,7 @@ check('stick falls back to axes 0 and 1',
   // Hand tracking reports no gamepad at all — it must not throw or be counted.
   c.poll([{ handedness: 'right', profiles: ['generic-hand-select'] }]);
   check('a gamepad-less input source is ignored safely', c.handsSeen.size === 0);
+  check('a missing gamepad is never "live"', !isLive(checkById('trigger'), null));
 }
 
 console.log(failures.length ? `\n${failures.length} failing check(s)` : '\nall controller checks passed');

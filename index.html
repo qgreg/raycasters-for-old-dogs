@@ -74,9 +74,20 @@
           <div class="mark__icon" aria-hidden="true">🥏</div>
           <div>
             <span class="mark__label">Fetch</span>
-            <p>Seven short lessons, then a practice range that keeps going as long as you want it to.
-              Five teach aiming; the last two walk the <strong>whole controller</strong> &mdash; trigger, grip,
-              thumbstick and its click, and both round buttons &mdash; ticking each one off as you press it.</p>
+            <p>Ten short lessons, then a practice range that keeps going as long as you want it to.
+              The <strong>controller comes first</strong>: trigger, grip, the thumbstick in all four directions
+              and pressed down, and both round buttons &mdash; on <strong>both hands</strong>, one control at a
+              time. Pointing comes after, once your hands already know where everything is.</p>
+          </div>
+        </li>
+        <li class="mark">
+          <div class="mark__icon" aria-hidden="true">🖐️</div>
+          <div>
+            <span class="mark__label">Watch your hands</span>
+            <p>A <strong>picture of each controller</strong> floats beside you, one per hand. The part being
+              asked for glows; the part you are pressing right now lights up; the parts you have proved
+              work turn green and stay green. The thumbstick picture has a dot that moves exactly as the
+              real stick moves, so you can see it working.</p>
           </div>
         </li>
         <li class="mark">
@@ -110,9 +121,11 @@
           <li>Open this page in the Meta Quest <strong>Browser</strong> app, then press the start button above.</li>
           <li>The headset asks permission to enter immersive mode &mdash; say yes.</li>
           <li>Hand tracking works too. Put the controllers down and pinch thumb to index finger instead of squeezing a trigger.</li>
-          <li>Buttons float below the targets: <strong>Repeat</strong>, <strong>Skip</strong>, and one to hide the diagnostics board. They are pointed at and clicked exactly like the targets, which is the point.</li>
-          <li>Lesson one finishes on a steady hold rather than a button press. If holding still is the hard part, that timer is in <strong>src/lessons.js</strong>.</li>
-          <li>The controller check asks for each control on <strong>both</strong> controllers, so a dead button on one of them shows up as the one box that never ticks.</li>
+          <li>Buttons float below: <strong>Repeat</strong>, <strong>Skip</strong>, <strong>Hands</strong>, and <strong>Board</strong>. They are pointed at and clicked exactly like the targets, which is the point.</li>
+          <li>The controller lessons come first and ask for every control on <strong>both</strong> controllers, alternating hands, so a dead button shows up as the one part of the picture that never turns green.</li>
+          <li>Each thumbstick direction is checked separately. A stick that only travels one way will not pass &mdash; which is the point.</li>
+          <li>The pointing lessons start at lesson 6. Lesson 6 finishes on a steady hold rather than a button press; if holding still is the hard part, that timer is in <strong>src/lessons.js</strong>.</li>
+          <li>The hand pictures and the diagnostics board share the space either side, so they take turns &mdash; the <strong>Hands</strong> and <strong>Board</strong> buttons swap between them.</li>
           <li>The Meta and Menu buttons cannot be read by any web page &mdash; the headset keeps them for itself. They are verified instead by watching the session get taken away and handed back, which is the counter marked <strong>trips away</strong> on the board.</li>
           <li>The board reports the controller <strong>layout</strong> exactly as the headset names it, and lists any button it reports that we did not expect. If a headset turns up with a different arrangement, it says so rather than quietly missing it.</li>
         </ul>

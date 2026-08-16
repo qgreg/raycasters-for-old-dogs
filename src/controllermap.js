@@ -22,6 +22,13 @@
  * unfamiliar hardware reports itself rather than going silently missing.
  */
 
+/**
+ * Each thumbstick direction is checked separately. A stick that only travels
+ * one way is a real fault, and a single push in any direction would have hidden
+ * it. Sign convention follows the gamepad norm — away from you is negative Y —
+ * but the diagram highlights the arrow being asked for and shows a live dot, so
+ * a runtime that inverts an axis is immediately visible rather than confusing.
+ */
 export const CHECKS = [
   {
     id: 'trigger',
@@ -38,10 +45,36 @@ export const CHECKS = [
     hint: 'On the inside of the handle, under your middle finger. Squeeze the controller.',
   },
   {
-    id: 'stick',
-    label: 'Thumbstick',
-    axes: true,
-    hint: 'The little stick under your thumb. Push it around in a circle.',
+    id: 'stickUp',
+    label: 'Stick forward',
+    axis: 'y',
+    sign: -1,
+    arrow: 'up',
+    hint: 'Push the little stick away from you.',
+  },
+  {
+    id: 'stickDown',
+    label: 'Stick back',
+    axis: 'y',
+    sign: 1,
+    arrow: 'down',
+    hint: 'Pull the little stick back toward you.',
+  },
+  {
+    id: 'stickLeft',
+    label: 'Stick left',
+    axis: 'x',
+    sign: -1,
+    arrow: 'left',
+    hint: 'Push the little stick to the left.',
+  },
+  {
+    id: 'stickRight',
+    label: 'Stick right',
+    axis: 'x',
+    sign: 1,
+    arrow: 'right',
+    hint: 'Push the little stick to the right.',
   },
   {
     id: 'stickClick',
@@ -63,7 +96,22 @@ export const CHECKS = [
   },
 ];
 
+/** Lesson-sized groups, so the controller is learned a piece at a time. */
+export const GROUPS = {
+  trigger: ['trigger'],
+  grip: ['grip'],
+  stick: ['stickUp', 'stickDown', 'stickLeft', 'stickRight', 'stickClick'],
+  buttons: ['lower', 'upper'],
+};
+
+export const HANDS = ['left', 'right'];
+
 const MAPPED = new Set([0, 1, 2, 3, 4, 5, 6]);
+const THRESHOLD = 0.6;
+
+export function checkById(id) {
+  return CHECKS.find((check) => check.id === id) || null;
+}
 
 /** A is the lower button on the right hand, X on the left. */
 export function labelFor(check, handedness) {
@@ -80,10 +128,26 @@ export function thumbstick(gamepad) {
   return { x: x ?? 0, y: y ?? 0 };
 }
 
+/** Is this control being worked right now? Used for the live diagram. */
+export function isLive(check, gamepad) {
+  if (!gamepad) return false;
+  if (check.axis) {
+    const { x, y } = thumbstick(gamepad);
+    const value = check.axis === 'x' ? x : y;
+    return value * check.sign > THRESHOLD;
+  }
+  const button = gamepad.buttons[check.index];
+  if (!button) return false;
+  return button.pressed || (check.analog && button.value > THRESHOLD);
+}
+
 /**
  * Tracks which controls have been exercised, per hand. There is no failure
  * state and no wrong answer — a control is either confirmed working or still
  * waiting, which is the right shape for both a lesson and a hardware check.
+ *
+ * `focus` narrows what counts as finished, so one lesson can ask for triggers
+ * while the running record of everything confirmed so far is kept intact.
  */
 export class ControllerCheck {
   constructor() {
@@ -94,7 +158,17 @@ export class ControllerCheck {
     this.confirmed = { left: {}, right: {} };
     this.handsSeen = new Set();
     this.unmapped = new Set();
-    this.lastConfirmed = null; // {hand, check} — for the "that one worked" beat
+    this.lastConfirmed = null;
+    this.focus = null; // null means "everything"
+  }
+
+  setFocus(ids) {
+    this.focus = ids && ids.length ? [...ids] : null;
+  }
+
+  get focused() {
+    if (!this.focus) return CHECKS;
+    return CHECKS.filter((check) => this.focus.includes(check.id));
   }
 
   poll(inputSources) {
@@ -109,17 +183,7 @@ export class ControllerCheck {
 
       for (const check of CHECKS) {
         if (record[check.id]) continue;
-
-        let fired = false;
-        if (check.axes) {
-          const { x, y } = thumbstick(pad);
-          fired = Math.hypot(x, y) > 0.65;
-        } else {
-          const button = pad.buttons[check.index];
-          fired = !!button && (button.pressed || (check.analog && button.value > 0.6));
-        }
-
-        if (fired) {
+        if (isLive(check, pad)) {
           record[check.id] = true;
           this.lastConfirmed = { hand, check };
           changed = true;
@@ -138,17 +202,27 @@ export class ControllerCheck {
   }
 
   remaining(hand) {
-    return CHECKS.filter((check) => !this.isDone(hand, check));
+    return this.focused.filter((check) => !this.isDone(hand, check));
   }
 
-  /** The next thing worth asking for, or null when everything seen is confirmed. */
+  /**
+   * The next thing worth asking for. Alternates hands so both controllers are
+   * exercised together rather than one being finished and then forgotten.
+   */
   next() {
-    for (const hand of ['right', 'left']) {
-      if (!this.handsSeen.has(hand)) continue;
-      const [check] = this.remaining(hand);
-      if (check) return { hand, check };
+    for (const check of this.focused) {
+      for (const hand of ['right', 'left']) {
+        if (!this.handsSeen.has(hand)) continue;
+        if (!this.isDone(hand, check)) return { hand, check };
+      }
     }
     return null;
+  }
+
+  /** What the diagram should highlight on a given hand, if anything. */
+  wantedFor(hand) {
+    const next = this.next();
+    return next && next.hand === hand ? next.check : null;
   }
 
   get complete() {
@@ -156,11 +230,12 @@ export class ControllerCheck {
   }
 
   get counts() {
+    const perHand = this.focused.length;
     let done = 0;
     let total = 0;
     for (const hand of this.handsSeen) {
-      total += CHECKS.length;
-      done += CHECKS.length - this.remaining(hand).length;
+      total += perHand;
+      done += perHand - this.remaining(hand).length;
     }
     return { done, total };
   }

@@ -63,11 +63,20 @@ async function main() {
     const cx = box.x + box.width / 2;
     const cy = box.y + box.height / 2;
 
+    // The run now opens on the controller lessons. On a flat screen they must
+    // announce themselves once and jump the whole block, not one at a time.
+    check('opens on the controller lessons', (await debug(() => window.__debug.lesson)) === 'ctrl-trigger');
+    check('and says it needs the headset',
+      /needs? the headset/i.test((await debug(() => window.__debug.board)).instruction));
+
+    await page.waitForTimeout(3000);
+    check('jumps the whole controller block in one go',
+      (await debug(() => window.__debug.lesson)) === 'aim');
+
     // Park the ray somewhere empty first: nothing should be hovered, and the
     // lesson must not advance on its own.
     await page.mouse.move(box.x + 20, box.y + box.height - 20);
     await page.waitForTimeout(400);
-    check('lesson 1 started', (await debug(() => window.__debug.lesson)) === 'aim');
     check('a target is on the range', (await debug(() => window.__debug.targets)) === 1);
     check('nothing hovered off-target', (await debug(() => window.__debug.hovering)) === null);
 
@@ -103,20 +112,14 @@ async function main() {
       (await debug(() => window.__debug.pointers.interactables.length)) >= 3,
       `lesson=${beforeLesson}`);
 
-    // The controller and system-button lessons need real hardware. On a flat
-    // screen they must announce that and step aside rather than dead-ending.
-    await debug(() => window.__debug.goto('controls'));
+    // Jumping into a headset-only lesson directly behaves the same way.
+    await debug(() => window.__debug.goto('ctrl-stick'));
     await page.waitForTimeout(400);
-    check('headset-only lesson says so',
-      /needs the headset/i.test((await debug(() => window.__debug.board)).instruction));
-
-    await page.waitForTimeout(2800);
-    check('and steps aside to the next one',
-      (await debug(() => window.__debug.lesson)) === 'system');
-
+    check('a headset-only lesson entered directly says so',
+      /needs? the headset/i.test((await debug(() => window.__debug.board)).instruction));
     await page.waitForTimeout(3000);
-    check('both headset-only lessons step aside',
-      (await debug(() => window.__debug.lesson)) === 'range');
+    check('and lands on a lesson that works without one',
+      (await debug(() => window.__debug.lesson)) === 'aim');
 
     check('no errors after interaction', errors.length === 0, errors.join(' | '));
     await page.screenshot({ path: path.join(ROOT, 'test', 'screenshot.png') });

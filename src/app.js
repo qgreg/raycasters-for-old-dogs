@@ -4,7 +4,8 @@ import { Target } from './targets.js';
 import { Pointers } from './pointers.js';
 import { Diagnostics } from './diagnostics.js';
 import { LESSONS, PRAISE } from './lessons.js';
-import { ControllerCheck, CHECKS, labelFor } from './controllermap.js';
+import { ControllerCheck, labelFor } from './controllermap.js';
+import { ControllerDiagram } from './controllerview.js';
 import { sfx, resume as resumeAudio } from './audio.js';
 
 const ARC_RADIUS = 2.1;   // how far away the targets float
@@ -71,11 +72,36 @@ statsPanel.position.set(-1.32, 1.45, -1.72);
 statsPanel.rotation.y = 0.6;
 scene.add(statsPanel);
 
-const checklistPanel = new Panel({ width: 1.05, height: 1.18, pxPerMeter: 620 });
-checklistPanel.position.set(-1.32, 1.5, -1.72);
-checklistPanel.rotation.y = 0.6;
-checklistPanel.visible = false;
-scene.add(checklistPanel);
+// A live picture of each controller, placed roughly where that hand is.
+const diagrams = {
+  left: new ControllerDiagram('left'),
+  right: new ControllerDiagram('right'),
+};
+diagrams.left.object3D.position.set(-0.86, 1.52, -1.5);
+diagrams.left.object3D.rotation.y = 0.42;
+diagrams.right.object3D.position.set(0.86, 1.52, -1.5);
+diagrams.right.object3D.rotation.y = -0.42;
+scene.add(diagrams.left.object3D, diagrams.right.object3D);
+
+// The hand pictures and the side boards want the same space either side of the
+// player, so they take turns. The board's on/off is remembered as a preference
+// and reasserts itself once the pictures are put away.
+let handsVisible = false;
+let boardWanted = true;
+
+function applyPanels() {
+  diagrams.left.visible = handsVisible;
+  diagrams.right.visible = handsVisible;
+  statsPanel.visible = !handsVisible;
+  diagnostics.object3D.visible = boardWanted && !handsVisible;
+  buttons[2]?.setLabel(handsVisible ? 'Hide hands' : 'Hands');
+  buttons[3]?.setLabel(diagnostics.object3D.visible ? 'Hide board' : 'Board');
+}
+
+function setHandsVisible(visible) {
+  handsVisible = visible;
+  applyPanels();
+}
 
 const pointers = new Pointers(renderer, scene, camera, { isDragging: () => look.didDrag });
 const diagnostics = new Diagnostics(renderer, pointers);
@@ -86,14 +112,16 @@ scene.add(diagnostics.object3D);
 const buttons = [
   new Button3D('Repeat', { onSelect: () => startLesson(lessonIndex) }),
   new Button3D('Skip', { onSelect: () => nextLesson() }),
-  new Button3D('Hide board', { onSelect: (btn) => {
-    const panel = diagnostics.object3D;
-    panel.visible = !panel.visible;
-    btn.setLabel(panel.visible ? 'Hide board' : 'Board');
+  new Button3D('Hands', { onSelect: () => setHandsVisible(!handsVisible) }),
+  new Button3D('Hide board', { onSelect: () => {
+    boardWanted = !boardWanted;
+    // Asking for the board is also a way of putting the pictures away.
+    if (boardWanted) handsVisible = false;
+    applyPanels();
   } }),
 ];
 buttons.forEach((button, i) => {
-  button.position.set(-0.7 + i * 0.7, 0.95, -1.7);
+  button.position.set(-1.02 + i * 0.68, 0.95, -1.7);
   button.rotation.x = -0.32;
   scene.add(button);
 });
@@ -141,12 +169,9 @@ const ctx = {
   // --- controller check, used by the "rest of the controller" lesson
   controllerCheck: null,
   labelFor,
-  beginControllerCheck() {
+  beginControllerCheck(ids) {
     ctx.controllerCheck = controllerCheck;
-    controllerCheck.reset();
-    statsPanel.visible = false;
-    checklistPanel.visible = true;
-    drawChecklist();
+    controllerCheck.setFocus(ids);
   },
   pollControllerCheck() {
     const session = renderer.xr.getSession();
@@ -159,7 +184,6 @@ const ctx = {
         if (pointer.handedness === last?.hand) pointer.pulse(0.5, 50);
       }
     }
-    drawChecklist();
   },
 
   // --- system buttons, which WebXR never sees pressed
@@ -185,33 +209,7 @@ function watchSystemButtons(session) {
   });
 }
 
-function drawChecklist() {
-  const rows = [];
-  const hands = ['right', 'left'].filter((h) => controllerCheck.handsSeen.has(h));
 
-  if (!hands.length) {
-    rows.push(['waiting for', 'a controller', COLORS.warn]);
-  }
-
-  for (const hand of hands) {
-    rows.push([hand === 'left' ? 'LEFT HAND' : 'RIGHT HAND', '', COLORS.accent]);
-    for (const check of CHECKS) {
-      const done = controllerCheck.isDone(hand, check);
-      rows.push([
-        ' ' + labelFor(check, hand).replace(' button', ''),
-        done ? 'ok' : '·',
-        done ? COLORS.good : COLORS.inkDim,
-      ]);
-    }
-    rows.push(['', '']);
-  }
-
-  if (controllerCheck.unmapped.size) {
-    rows.push(['also reporting', [...controllerCheck.unmapped].map((i) => 'b' + i).join(' '), COLORS.warn]);
-  }
-
-  checklistPanel.rows({ title: 'Controller check', rows, rowSize: 0.05 });
-}
 
 function place(target, angleDeg, height) {
   const a = THREE.MathUtils.degToRad(angleDeg);
@@ -246,20 +244,20 @@ function startLesson(index) {
   lesson = LESSONS[index];
   ctx.clearTargets();
   ctx.controllerCheck = null;
-  checklistPanel.visible = false;
-  statsPanel.visible = true;
+  setHandsVisible(!!lesson.showHands);
 
-  // Two lessons need real hardware. On a flat screen, say so and move along
-  // rather than parking the player in front of something they cannot finish.
+  // The controller lessons need real hardware. On a flat screen, say so once
+  // and jump the whole run of them rather than skipping one at a time.
   if (lesson.needsHeadset && !renderer.xr.isPresenting) {
+    const next = LESSONS.findIndex((l, i) => i > index && !l.needsHeadset);
     say({
       title: lesson.title,
-      instruction: 'This one needs the headset and its controllers.',
-      footer: 'Skipping ahead…',
+      instruction: 'The controller lessons need the headset and its two controllers.',
+      footer: 'Going straight to the pointing practice…',
     });
     const skipping = index;
     setTimeout(() => {
-      if (lessonIndex === skipping && !finished) startLesson(index + 1);
+      if (lessonIndex === skipping && !finished) startLesson(next >= 0 ? next : index + 1);
     }, 2600);
     return;
   }
@@ -354,6 +352,16 @@ function registerHit(target, pointer) {
   lesson?.onHit?.(target, ctx);
 }
 
+function updateDiagrams() {
+  if (!diagrams.left.visible && !diagrams.right.visible) return;
+  const session = renderer.xr.getSession();
+  const sources = session ? Array.from(session.inputSources) : [];
+  for (const hand of ['left', 'right']) {
+    const source = sources.find((s) => s.handedness === hand);
+    diagrams[hand].update(source?.gamepad || null, controllerCheck);
+  }
+}
+
 // ------------------------------------------------------------- stats board
 
 let lastStatsDraw = 0;
@@ -402,6 +410,7 @@ renderer.setAnimationLoop(() => {
   }
 
   pointers.update();
+  updateDiagrams();
   lesson?.update?.(dt, ctx);
   drawStats();
   diagnostics.systemTrips = systemTrips;
@@ -527,6 +536,7 @@ window.__debug = {
   get hovering() { return pointers.all.map((p) => p.hovered?.constructor.name ?? null).find(Boolean) ?? null; },
   get presenting() { return renderer.xr.isPresenting; },
   get systemTrips() { return systemTrips; },
+  hands(visible = true) { setHandsVisible(visible); },
   goto(id) {
     const index = LESSONS.findIndex((l) => l.id === id);
     if (index >= 0) startLesson(index);
