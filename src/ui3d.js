@@ -5,15 +5,18 @@ import * as THREE from '../vendor/three.module.js';
 
 const PX_PER_METER = 640;
 
+// Biscuit & Espresso. Warm hues pass through an aging lens at close to full
+// strength, where blues arrive dimmed — so the type is biscuit and cream on a
+// warm dark ground, never bright fields that would glare at two metres.
 export const COLORS = {
-  ink: '#eef2fb',
-  inkDim: '#9fabc4',
-  accent: '#4cc2ff',
-  good: '#63e6a0',
-  warn: '#ffc861',
-  bad: '#ff7a7a',
-  panel: 'rgba(14, 19, 32, 0.92)',
-  panelEdge: 'rgba(76, 194, 255, 0.35)',
+  ink: '#F5E6C8',
+  inkDim: '#A79C86',
+  accent: '#F2D479',
+  good: '#8FB96A',
+  warn: '#E8A33D',
+  bad: '#D97A5A',
+  panel: 'rgba(28, 26, 23, 0.93)',
+  panelEdge: 'rgba(242, 212, 121, 0.38)',
 };
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -75,7 +78,7 @@ export class Panel extends THREE.Mesh {
   background(fill = COLORS.panel, edge = COLORS.panelEdge) {
     const { ctx, canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    roundRect(ctx, 4, 4, canvas.width - 8, canvas.height - 8, Math.round(canvas.width * 0.035));
+    roundRect(ctx, 4, 4, canvas.width - 8, canvas.height - 8, Math.round(canvas.width * 0.016));
     ctx.fillStyle = fill;
     ctx.fill();
     ctx.lineWidth = 5;
@@ -213,16 +216,16 @@ export class Button3D extends THREE.Group {
     const { ctx, canvas } = this.panel;
     const hovered = this.hovered;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    roundRect(ctx, 4, 4, canvas.width - 8, canvas.height - 8, canvas.height * 0.28);
-    ctx.fillStyle = hovered ? 'rgba(76, 194, 255, 0.95)' : 'rgba(38, 51, 83, 0.95)';
+    roundRect(ctx, 4, 4, canvas.width - 8, canvas.height - 8, canvas.height * 0.16);
+    ctx.fillStyle = hovered ? 'rgba(242, 212, 121, 0.96)' : 'rgba(38, 34, 30, 0.95)';
     ctx.fill();
     ctx.lineWidth = 6;
-    ctx.strokeStyle = hovered ? '#bfe9ff' : 'rgba(120, 150, 200, 0.6)';
+    ctx.strokeStyle = hovered ? '#F5E6C8' : 'rgba(167, 156, 134, 0.7)';
     ctx.stroke();
 
     const size = Math.round(canvas.height * 0.42);
     ctx.font = `600 ${size}px system-ui, sans-serif`;
-    ctx.fillStyle = hovered ? '#04121d' : COLORS.ink;
+    ctx.fillStyle = hovered ? '#1C1A17' : COLORS.ink;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(this.label, canvas.width / 2, canvas.height / 2);

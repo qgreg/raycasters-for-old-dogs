@@ -1,27 +1,35 @@
+/*
+  Biscuit & Espresso.
+  Warm both ends: no pure black, no fluorescent yellow, no pure white. An aging
+  lens yellows and scatters, so warm hues arrive at full strength while blues
+  arrive dimmed — this palette is chosen to be read comfortably at 80, and the
+  contrast ratios below are measured, not guessed.
+*/
 :root {
-  --bg: #0e1320;
-  --bg-soft: #171f33;
-  --ink: #eef2fb;
-  --ink-dim: #a8b3ca;
-  --accent: #4cc2ff;
-  --accent-ink: #04121d;
-  --good: #63e6a0;
-  --warn: #ffc861;
-  --bad: #ff7a7a;
-  --radius: 16px;
+  --espresso: #26221E;   /* ground */
+  --ink: #1C1A17;        /* bands and deepest type */
+  --biscuit: #F2D479;    /* the yellow.        10.9:1 on espresso */
+  --cream: #F5E6C8;      /* body text.         12.8:1 on espresso */
+  --amber: #E8A33D;      /* accents, the beam.  7.3:1 on espresso */
+  --muted: #A79C86;      /* secondary text.     5.8:1 on espresso */
+  --good: #8FB96A;
+  --warn: #E8A33D;
+  --bad: #D97A5A;        /* terracotta, not red */
+
+  --display: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --body: Georgia, "Iowan Old Style", "Noto Serif", "Times New Roman", serif;
 }
 
 * { box-sizing: border-box; }
 
 html, body {
   margin: 0;
-  height: 100%;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  /* Old eyes. Everything here is deliberately oversized. */
+  min-height: 100%;
+  background: var(--espresso);
+  color: var(--cream);
+  font-family: var(--body);
   font-size: 20px;
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 canvas { display: block; }
@@ -30,123 +38,267 @@ canvas { display: block; }
   position: fixed;
   inset: 0;
   overflow-y: auto;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 6vh 20px;
-  background:
-    radial-gradient(120% 90% at 50% 0%, #1d2947 0%, var(--bg) 60%);
   z-index: 10;
+  background: var(--espresso);
+  padding: 0 0 64px;
 }
-
 #overlay[hidden] { display: none; }
 
-.card {
-  width: min(760px, 100%);
-  background: var(--bg-soft);
-  border: 1px solid #2a3550;
-  border-radius: var(--radius);
-  padding: 36px clamp(20px, 5vw, 44px) 40px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .45);
+.sheet {
+  width: min(720px, 100%);
+  margin: 0 auto;
 }
 
-h1 {
-  margin: 0 0 6px;
-  font-size: clamp(34px, 6vw, 52px);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+/* ------------------------------------------------------------------ cover */
+
+.cover {
+  background: var(--biscuit);
+  color: var(--ink);
+  border-radius: 0 0 6px 6px;
+  overflow: hidden;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .38);
 }
 
-h1 .thin { font-weight: 300; color: var(--ink-dim); }
+.band {
+  background: var(--ink);
+  color: var(--biscuit);
+  font-family: var(--display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  font-size: 13px;
+  padding: 12px clamp(20px, 5vw, 40px);
+}
 
-.lede {
-  margin: 0 0 28px;
-  color: var(--ink-dim);
-  font-size: clamp(18px, 2.4vw, 22px);
+.band--bottom {
+  letter-spacing: .06em;
+  font-size: 15px;
+  text-transform: none;
+  color: var(--cream);
+}
+
+.cover__body {
+  position: relative;
+  padding: clamp(26px, 5vw, 44px) clamp(20px, 5vw, 40px) 0;
+  min-height: 372px;
+}
+
+/* Keeps the title clear of the dog at every width. */
+.cover__text { padding-right: 0; }
+
+@media (max-width: 460px) {
+  .cover__text { padding-right: 0; }
+  .dog { position: static; display: block; margin: 18px auto -4px; width: 176px; }
+  .cover__body { min-height: 0; padding-bottom: 0; }
+}
+
+.eyebrow {
+  font-family: var(--display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .13em;
+  font-size: 13px;
+  margin: 0 0 14px;
+  color: #6B5526;
+}
+
+.cover h1 {
+  font-family: var(--display);
+  font-weight: 900;
+  letter-spacing: -.035em;
+  line-height: .92;
+  font-size: clamp(46px, 11.2vw, 92px);
+  margin: 0;
+}
+
+.cover .forwhom {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(26px, 5.4vw, 44px);
+  letter-spacing: -.02em;
+  margin: 6px 0 0;
+  color: var(--ink);
+}
+.cover .forwhom em {
+  font-style: italic;
+  font-weight: 800;
+}
+
+/* The burst: a nod to the shout-lines every reference paperback wears. */
+.burst {
+  display: inline-block;
+  margin: 22px 0 0;
+  background: var(--ink);
+  color: var(--biscuit);
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.35;
+  padding: 10px 16px;
+  max-width: 15em;
+  transform: rotate(-2.2deg);
+}
+
+.dog {
+  position: absolute;
+  right: clamp(6px, 3vw, 26px);
+  bottom: 0;
+  width: clamp(136px, 26vw, 198px);
+  height: auto;
+}
+
+/* ------------------------------------------------------- interior "pages" */
+
+.pages {
+  padding: 0 clamp(20px, 5vw, 40px);
 }
 
 .status {
-  border-radius: 12px;
-  padding: 14px 18px;
-  margin-bottom: 22px;
-  font-size: 19px;
-  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 15px 18px;
+  margin: 30px 0 22px;
+  font-family: var(--display);
+  font-size: 18px;
+  border-left: 6px solid var(--muted);
+  background: rgba(245, 230, 200, .07);
+  color: var(--cream);
 }
-.status--checking { background: #1f2a44; color: var(--ink-dim); }
-.status--ok       { background: rgba(99, 230, 160, .12); border-color: rgba(99, 230, 160, .4); color: var(--good); }
-.status--warn     { background: rgba(255, 200, 97, .12); border-color: rgba(255, 200, 97, .4); color: var(--warn); }
-.status--bad      { background: rgba(255, 122, 122, .12); border-color: rgba(255, 122, 122, .4); color: var(--bad); }
+.status--checking { border-left-color: var(--muted); color: var(--muted); }
+.status--ok       { border-left-color: var(--good); }
+.status--warn     { border-left-color: var(--warn); }
+.status--bad      { border-left-color: var(--bad); }
 
 .btn {
   display: block;
   width: 100%;
   margin: 0 0 14px;
   padding: 20px 24px;
-  font: inherit;
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--ink);
-  background: #263353;
-  border: 1px solid #3a4a70;
-  border-radius: 14px;
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--cream);
+  background: transparent;
+  border: 2px solid var(--muted);
+  border-radius: 4px;
   cursor: pointer;
-  transition: transform .06s ease, background .15s ease;
+  transition: background .15s ease, transform .06s ease;
 }
-.btn:hover { background: #2e3d63; }
+.btn:hover { background: rgba(245, 230, 200, .09); }
 .btn:active { transform: translateY(1px); }
-.btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.btn:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
 .btn[hidden] { display: none; }
 
 .btn--primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-ink);
-  font-size: 26px;
+  background: var(--biscuit);
+  border-color: var(--biscuit);
+  color: var(--ink);
+  font-size: 25px;
+  font-weight: 800;
   padding: 24px;
 }
-.btn--primary:hover { background: #6bcdff; }
+.btn--primary:hover { background: #f7de91; }
+
+h2 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -.01em;
+  margin: 40px 0 6px;
+  color: var(--biscuit);
+}
+
+.rule {
+  border: 0;
+  border-top: 2px solid rgba(245, 230, 200, .18);
+  margin: 8px 0 22px;
+}
+
+/* Margin markers: the bit of the genre actually worth borrowing. Each one
+   tells you what kind of thing this is before you read it. */
+.marks { margin: 0; padding: 0; list-style: none; }
+
+.mark {
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.mark__icon {
+  font-size: 30px;
+  line-height: 1;
+  text-align: center;
+  padding-top: 4px;
+}
+
+.mark__label {
+  display: block;
+  font-family: var(--display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: 12px;
+  color: var(--amber);
+  margin-bottom: 3px;
+}
+
+.mark p { margin: 0; }
+.mark strong { color: var(--biscuit); font-weight: 700; }
 
 .steps {
-  margin: 30px 0 0;
+  margin: 0;
   padding-left: 26px;
-  color: var(--ink);
 }
 .steps li { margin-bottom: 14px; }
-.steps em { color: var(--accent); font-style: normal; font-weight: 600; }
-.steps strong { color: var(--accent); }
+.steps em { font-style: normal; font-weight: 700; color: var(--biscuit); }
+.steps strong { color: var(--biscuit); }
 
-.notes {
-  margin-top: 28px;
-  border-top: 1px solid #2a3550;
-  padding-top: 18px;
-  color: var(--ink-dim);
-  font-size: 17px;
-}
-.notes summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--ink);
+/* A sidebar box: explicitly optional, like the ones in the books. */
+.sidebar {
+  margin: 34px 0 0;
+  border: 2px solid rgba(245, 230, 200, .2);
+  border-radius: 4px;
+  padding: 20px 22px;
+  background: rgba(245, 230, 200, .05);
   font-size: 18px;
+  color: var(--muted);
 }
-.notes ul { margin: 14px 0 0; padding-left: 22px; }
-.notes li { margin-bottom: 10px; }
+.sidebar summary {
+  cursor: pointer;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--cream);
+  letter-spacing: .01em;
+}
+.sidebar ul { margin: 16px 0 0; padding-left: 22px; }
+.sidebar li { margin-bottom: 10px; }
+.sidebar strong { color: var(--cream); }
 
-/* Small heads-up shown while running in the browser (non-VR) mode. */
+.colophon {
+  margin: 40px 0 0;
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------ in-app hint */
+
 #hint {
   position: fixed;
   left: 50%;
-  bottom: 24px;
+  bottom: 22px;
   transform: translateX(-50%);
   z-index: 5;
-  background: rgba(14, 19, 32, .82);
-  border: 1px solid #3a4a70;
-  border-radius: 999px;
-  padding: 12px 22px;
-  font-size: 17px;
-  color: var(--ink-dim);
+  background: rgba(28, 26, 23, .9);
+  border: 2px solid rgba(245, 230, 200, .25);
+  border-radius: 4px;
+  padding: 11px 20px;
+  font-family: var(--display);
+  font-size: 16px;
+  color: var(--muted);
   pointer-events: none;
-  backdrop-filter: blur(6px);
 }
 #hint[hidden] { display: none; }
-
-#hint b { color: var(--ink); font-weight: 600; }
+#hint b { color: var(--cream); font-weight: 700; }

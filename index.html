@@ -3,41 +3,116 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="A WebXR ray caster practice range for the Meta Quest browser.">
+<meta name="description" content="A WebXR ray caster practice range for the Meta Quest browser. Aim the beam, squeeze the trigger.">
+<meta name="theme-color" content="#26221E">
 <title>Raycasters for Old Dogs</title>
 <link rel="stylesheet" href="./styles.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🐕</text></svg>">
+<link rel="icon" href="./assets/old-dog.svg" type="image/svg+xml">
 </head>
 <body>
 
 <div id="overlay">
-  <main class="card">
-    <h1>Raycasters<span class="thin"> for </span>Old Dogs</h1>
-    <p class="lede">A gentle practice range for the pointer beam that comes out of your VR controller.</p>
+  <div class="sheet">
 
-    <div id="status" class="status status--checking">Checking your headset&hellip;</div>
+    <article class="cover">
+      <div class="band band--top">The Old Dog Series &middot; Volume One</div>
 
-    <button id="enter-vr" class="btn btn--primary" hidden>Put on the headset &amp; start</button>
-    <button id="enter-desktop" class="btn">Try it here on this screen</button>
+      <div class="cover__body">
+        <div class="cover__text">
+        <p class="eyebrow">Pointing at things in virtual reality</p>
+        <h1>Raycasters</h1>
+        <p class="forwhom">for <em>Old Dogs</em></p>
+        <p class="burst">Now with 100% less falling over</p>
+        </div>
 
-    <ol class="steps">
-      <li>Hold a controller in each hand. A colored beam shines out of the front.</li>
-      <li>Move your <em>hand</em> to aim the beam &mdash; not your head, not your eyes.</li>
-      <li>When the dot lands on a target, squeeze the <strong>trigger</strong> with your index finger.</li>
-      <li>That is the whole trick. Everything in VR works this way.</li>
-    </ol>
+        <svg class="dog" viewBox="0 0 260 240" role="img" aria-label="A grey-muzzled dog wearing a VR headset, built from triangles">
+          <g stroke-linejoin="round" stroke-linecap="round">
+            <path d="M168 186 L212 152 L224 174 L182 200 Z" fill="#C08F45" stroke="#C08F45" stroke-width="15"/>
+            <path d="M130 104 L184 198 L76 198 Z" fill="#D9A85C" stroke="#D9A85C" stroke-width="18"/>
+            <path d="M84 188 L106 188 L100 206 L78 206 Z" fill="#CFC6B4" stroke="#CFC6B4" stroke-width="9"/>
+            <path d="M154 188 L176 188 L182 206 L160 206 Z" fill="#CFC6B4" stroke="#CFC6B4" stroke-width="9"/>
+            <path d="M86 44 L58 32 L64 110 Z" fill="#C08F45" stroke="#C08F45" stroke-width="14"/>
+            <path d="M174 44 L202 32 L196 110 Z" fill="#C08F45" stroke="#C08F45" stroke-width="14"/>
+            <path d="M86 34 L174 34 L160 110 L100 110 Z" fill="#D9A85C" stroke="#D9A85C" stroke-width="18"/>
+            <path d="M130 142 L158 96 L102 96 Z" fill="#CFC6B4" stroke="#CFC6B4" stroke-width="15"/>
+            <path d="M130 138 L141 121 L119 121 Z" fill="#26221E" stroke="#26221E" stroke-width="7"/>
+            <path d="M70 56 L190 56 L190 74 L70 74 Z" fill="#3A342C" stroke="#3A342C" stroke-width="9"/>
+            <path d="M86 46 L174 46 L166 84 L94 84 Z" fill="#26221E" stroke="#26221E" stroke-width="13"/>
+            <path d="M100 57 L136 57 L116 77 Z" fill="#E8A33D" stroke="#E8A33D" stroke-width="6"/>
+          </g>
+        </svg>
+      </div>
 
-    <details class="notes">
-      <summary>Notes for the person setting this up</summary>
-      <ul>
-        <li>Open this page in the Meta Quest <strong>Browser</strong> app, then press the start button above.</li>
-        <li>The headset will ask permission to enter immersive mode &mdash; say yes.</li>
-        <li>Nothing moves you around: you stay standing in one spot the whole time, so it will not make anyone queasy.</li>
-        <li>Hand tracking works too. Put the controllers down and pinch your thumb and index finger together instead of squeezing a trigger.</li>
-        <li>There is a live diagnostics board inside showing controller, button, and ray data &mdash; useful for checking that a headset is behaving.</li>
+      <div class="band band--bottom">A standing-still guide to pointing at things</div>
+    </article>
+
+    <div class="pages">
+
+      <div id="status" class="status status--checking">Checking your headset&hellip;</div>
+
+      <button id="enter-vr" class="btn btn--primary" hidden>Put the headset on &amp; start</button>
+      <button id="enter-desktop" class="btn">Try it here on this screen</button>
+
+      <h2>The whole trick</h2>
+      <hr class="rule">
+      <ol class="steps">
+        <li>Hold a controller in each hand. A beam of light shines out of the front.</li>
+        <li>Move your <em>hand</em> to aim the beam &mdash; not your head, not your eyes.</li>
+        <li>When the dot lands on a target, squeeze the <strong>trigger</strong> with your index finger.</li>
+        <li>That is it. Every button, menu, and door in virtual reality works this way.</li>
+      </ol>
+
+      <h2>Things worth knowing</h2>
+      <hr class="rule">
+      <ul class="marks">
+        <li class="mark">
+          <div class="mark__icon" aria-hidden="true">🦴</div>
+          <div>
+            <span class="mark__label">Treat</span>
+            <p>Aim with your <strong>whole arm</strong>, not your wrist. It is steadier, and it does not tire out.</p>
+          </div>
+        </li>
+        <li class="mark">
+          <div class="mark__icon" aria-hidden="true">🥏</div>
+          <div>
+            <span class="mark__label">Fetch</span>
+            <p>Five short lessons, then a practice range that keeps going as long as you want it to.</p>
+          </div>
+        </li>
+        <li class="mark">
+          <div class="mark__icon" aria-hidden="true">🪢</div>
+          <div>
+            <span class="mark__label">Leash</span>
+            <p>You stay standing in one spot the whole time. <strong>Nothing moves you</strong>, so there is nothing here that can make you queasy.</p>
+          </div>
+        </li>
+        <li class="mark">
+          <div class="mark__icon" aria-hidden="true">⚙️</div>
+          <div>
+            <span class="mark__label">Under the hood</span>
+            <p>A board on your right shows live controller readings. It is for the curious &mdash; <strong>ignoring it costs you nothing</strong>.</p>
+          </div>
+        </li>
       </ul>
-    </details>
-  </main>
+
+      <details class="sidebar">
+        <summary>For whoever is setting this up</summary>
+        <ul>
+          <li>Open this page in the Meta Quest <strong>Browser</strong> app, then press the start button above.</li>
+          <li>The headset asks permission to enter immersive mode &mdash; say yes.</li>
+          <li>Hand tracking works too. Put the controllers down and pinch thumb to index finger instead of squeezing a trigger.</li>
+          <li>Buttons float below the targets: <strong>Repeat</strong>, <strong>Skip</strong>, and one to hide the diagnostics board. They are pointed at and clicked exactly like the targets, which is the point.</li>
+          <li>Lesson one finishes on a steady hold rather than a button press. If holding still is the hard part, that timer is in <strong>src/lessons.js</strong>.</li>
+        </ul>
+      </details>
+
+      <p class="colophon">
+        Not affiliated with, endorsed by, or derived from any other reference series.
+        Just an affectionate nod from the family, so an old dog can go on new adventures.
+      </p>
+
+    </div>
+  </div>
 </div>
 
 <script type="module" src="./src/app.js"></script>

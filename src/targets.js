@@ -1,8 +1,13 @@
 import * as THREE from '../vendor/three.module.js';
 
-const IDLE = 0x2f6fb0;
-const HOVER = 0x4cc2ff;
-const HIT = 0x63e6a0;
+// The disc stays deep and the ring carries the brightness: a fully lit biscuit
+// disc at arm's length is a glare source, and glare is slow to recover from at 80.
+const IDLE = 0x6b5327;
+const HOVER = 0x9a6f2e;
+const HIT = 0x6f9350;
+const RING_IDLE = 0xb5813a;
+const RING_HOVER = 0xf2d479;
+const RING_HIT = 0x8fb96a;
 
 /**
  * A big friendly disc to point at. Faces the player, glows on hover, pops when
@@ -26,14 +31,14 @@ export class Target extends THREE.Group {
 
     this.ring = new THREE.Mesh(
       new THREE.TorusGeometry(radius * 1.08, radius * 0.09, 12, 48),
-      new THREE.MeshBasicMaterial({ color: HOVER })
+      new THREE.MeshBasicMaterial({ color: RING_IDLE })
     );
     this.add(this.ring);
 
     // A small bullseye so there is an obvious thing to put the dot on.
     this.pip = new THREE.Mesh(
       new THREE.CircleGeometry(radius * 0.16, 24),
-      new THREE.MeshBasicMaterial({ color: 0xffffff })
+      new THREE.MeshBasicMaterial({ color: 0xF5E6C8 })
     );
     this.pip.position.z = 0.002;
     this.add(this.pip);
@@ -52,6 +57,7 @@ export class Target extends THREE.Group {
     if (hovered === this.hovered) return;
     this.hovered = hovered;
     this.disc.material.color.setHex(hovered ? HOVER : IDLE);
+    this.ring.material.color.setHex(hovered ? RING_HOVER : RING_IDLE);
     this.hoverStartedAt = hovered ? performance.now() : 0;
   }
 
@@ -64,7 +70,7 @@ export class Target extends THREE.Group {
     this.dead = true;
     this.hitAt = performance.now();
     this.disc.material.color.setHex(HIT);
-    this.ring.material.color.setHex(HIT);
+    this.ring.material.color.setHex(RING_HIT);
     this.pip.visible = false;
   }
 
@@ -114,7 +120,7 @@ function makeLabel(text, radius) {
   canvas.height = 160;
   const ctx = canvas.getContext('2d');
   ctx.font = '600 96px system-ui, sans-serif';
-  ctx.fillStyle = '#eef2fb';
+  ctx.fillStyle = '#F5E6C8';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, 256, 84);

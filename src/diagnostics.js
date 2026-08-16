@@ -33,13 +33,15 @@ export class Diagnostics {
     // Redrawing a canvas texture is not free; 5 Hz is plenty to read.
     if (now - this.lastDraw < 200) return;
     this.lastDraw = now;
-    this.panel.rows({ title: 'Ray caster diagnostics', rows: this.#collect(), rowSize: 0.042 });
+    this.panel.rows({ title: 'Under the hood', rows: this.#collect(), rowSize: 0.042 });
   }
 
   #collect() {
     const xr = this.renderer.xr;
     const session = xr.getSession();
     const rows = [];
+    rows.push(['skip unless curious', '']);
+    rows.push(['', '']);
 
     const fpsColor = this.fps >= 68 ? COLORS.good : this.fps >= 45 ? COLORS.warn : COLORS.bad;
     rows.push(['fps', this.fps || '—', fpsColor]);

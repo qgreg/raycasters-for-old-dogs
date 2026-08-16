@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 240" width="260" height="240" role="img" aria-label="A grey-muzzled dog wearing a VR headset, built from triangles">
+  <!--
+    The mark: an old dog assembled entirely out of triangles and wedges.
+    Flat, three colours, no gradients — it has to survive being drawn small and
+    being pasted onto a canvas texture inside the headset. Rounded corners come
+    from stroking each shape in its own fill colour rather than from rx.
+  -->
+  <g stroke-linejoin="round" stroke-linecap="round">
+
+    <!-- tail: a wedge flicked up behind, rooted inside the body -->
+    <path d="M168 186 L212 152 L224 174 L182 200 Z" fill="#C08F45" stroke="#C08F45" stroke-width="15"/>
+
+    <!-- body: a broad sitting wedge -->
+    <path d="M130 104 L184 198 L76 198 Z" fill="#D9A85C" stroke="#D9A85C" stroke-width="18"/>
+
+    <!-- front paws -->
+    <path d="M84 188 L106 188 L100 206 L78 206 Z" fill="#CFC6B4" stroke="#CFC6B4" stroke-width="9"/>
+    <path d="M154 188 L176 188 L182 206 L160 206 Z" fill="#CFC6B4" stroke="#CFC6B4" stroke-width="9"/>
+
+    <!-- ears: triangles, flopped down either side of the strap -->
+    <path d="M86 44 L58 32 L64 110 Z" fill="#C08F45" stroke="#C08F45" stroke-width="14"/>
+    <path d="M174 44 L202 32 L196 110 Z" fill="#C08F45" stroke="#C08F45" stroke-width="14"/>
+
+    <!-- head: a faceted wedge, wider at the brow than at the jaw -->
+    <path d="M86 34 L174 34 L160 110 L100 110 Z" fill="#D9A85C" stroke="#D9A85C" stroke-width="18"/>
+
+    <!-- muzzle: the grey one, pointing down. He has earned it. -->
+    <path d="M130 142 L158 96 L102 96 Z" fill="#CFC6B4" stroke="#CFC6B4" stroke-width="15"/>
+
+    <!-- nose -->
+    <path d="M130 138 L141 121 L119 121 Z" fill="#26221E" stroke="#26221E" stroke-width="7"/>
+
+    <!-- headset strap, passing over the ears -->
+    <path d="M70 56 L190 56 L190 74 L70 74 Z" fill="#3A342C" stroke="#3A342C" stroke-width="9"/>
+
+    <!-- visor: the piece doing the job the round glasses used to do -->
+    <path d="M86 46 L174 46 L166 84 L94 84 Z" fill="#26221E" stroke="#26221E" stroke-width="13"/>
+
+    <!-- lens glint: a single amber triangle -->
+    <path d="M100 57 L136 57 L116 77 Z" fill="#E8A33D" stroke="#E8A33D" stroke-width="6"/>
+
+  </g>
+</svg>

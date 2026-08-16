@@ -12,8 +12,8 @@ const HEAD_HEIGHT = 1.6;  // assumed eye height when the headset has no floor
 // ---------------------------------------------------------------- scene setup
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0e1320);
-scene.fog = new THREE.Fog(0x0e1320, 6, 18);
+scene.background = new THREE.Color(0x26221E);
+scene.fog = new THREE.Fog(0x26221E, 6, 18);
 
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 60);
 camera.position.set(0, HEAD_HEIGHT, 0);
@@ -34,7 +34,7 @@ window.addEventListener('resize', () => {
 buildRoom();
 
 function buildRoom() {
-  const grid = new THREE.GridHelper(24, 24, 0x3a4a70, 0x1e2942);
+  const grid = new THREE.GridHelper(24, 24, 0x6b5f4a, 0x3a342c);
   grid.material.transparent = true;
   grid.material.opacity = 0.75;
   scene.add(grid);
@@ -42,7 +42,7 @@ function buildRoom() {
   // A lit pad under the player's feet so it is obvious where "here" is.
   const pad = new THREE.Mesh(
     new THREE.RingGeometry(0.55, 0.62, 48),
-    new THREE.MeshBasicMaterial({ color: 0x4cc2ff, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+    new THREE.MeshBasicMaterial({ color: 0xE8A33D, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
   );
   pad.rotation.x = -Math.PI / 2;
   pad.position.y = 0.01;
@@ -51,7 +51,7 @@ function buildRoom() {
   // Faint arc on the floor showing where the targets live.
   const arc = new THREE.Mesh(
     new THREE.RingGeometry(ARC_RADIUS - 0.02, ARC_RADIUS + 0.02, 64, 1, Math.PI * 0.28, Math.PI * 0.44),
-    new THREE.MeshBasicMaterial({ color: 0x2f6fb0, transparent: true, opacity: 0.35, side: THREE.DoubleSide })
+    new THREE.MeshBasicMaterial({ color: 0xb5813a, transparent: true, opacity: 0.35, side: THREE.DoubleSide })
   );
   arc.rotation.x = -Math.PI / 2;
   arc.position.y = 0.012;

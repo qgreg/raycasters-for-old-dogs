@@ -18,6 +18,36 @@ there is nothing in here that causes motion sickness.
 Controllers or hand tracking both work. WebXR gives tracked hands a target ray
 of their own, so pinching thumb-to-index behaves exactly like a trigger pull.
 
+## Look and feel
+
+Styled as an affectionate nod to the plain-English reference paperback — a
+yellow-and-dark cover, margin markers, an explicitly-skippable sidebar. The
+resemblance stops at the genre: no borrowed wordmark, tagline, or mascot. The
+dog is ours, assembled out of triangles, and the palette is deliberately not
+theirs.
+
+**Biscuit & Espresso** warms both ends of the yellow-and-black idea: no pure
+black, no fluorescent yellow, no pure white.
+
+| Token | Hex | On espresso |
+|---|---|---|
+| espresso (ground) | `#26221E` | — |
+| biscuit (the yellow) | `#F2D479` | 10.9:1 |
+| cream (body text) | `#F5E6C8` | 12.8:1 |
+| amber (accents, the beam) | `#E8A33D` | 7.3:1 |
+| muted (secondary) | `#A79C86` | 5.8:1 |
+
+The choice is not only taste. An aging lens yellows and scatters light, so blues
+arrive dimmed while warm hues arrive at close to full strength; contrast
+sensitivity drops, so the ratios stay high; and glare recovery slows, so there
+are no large bright fields inside the headset — the targets are deep honey
+discs with bright rings rather than lit discs, and text is warm-bright on
+warm-dark rather than the reverse.
+
+Nothing is signalled by colour alone. A hit is a pop, a rising tone, and a
+haptic pulse as well as a colour change, so the app works for a red/green
+deficit without any special mode.
+
 ## The lessons
 
 | # | Lesson | What it teaches |

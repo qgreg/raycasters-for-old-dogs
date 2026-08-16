@@ -32,13 +32,13 @@ class Pointer {
 
     this.beam = new THREE.Mesh(
       makeBeamGeometry(),
-      new THREE.MeshBasicMaterial({ color: 0x4cc2ff, transparent: true, opacity: 0.75, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: 0xE8A33D, transparent: true, opacity: 0.75, depthWrite: false })
     );
     this.beam.visible = false;
 
     this.reticle = new THREE.Mesh(
       new THREE.SphereGeometry(0.016, 16, 12),
-      new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: false, transparent: true })
+      new THREE.MeshBasicMaterial({ color: 0xF5E6C8, depthTest: false, transparent: true })
     );
     this.reticle.renderOrder = 999;
     this.reticle.visible = false;
@@ -224,7 +224,7 @@ export class Pointers {
       if (pointer.kind === 'xr' && pointer.connected) {
         pointer.beam.scale.z = Math.max(0.05, pointer.hitDistance);
         pointer.beam.material.opacity = hit ? 0.95 : 0.5;
-        pointer.beam.material.color.setHex(hit ? 0x9ad8ff : 0x4cc2ff);
+        pointer.beam.material.color.setHex(hit ? 0xF2D479 : 0xE8A33D);
       }
 
       const showDot = pointer.kind === 'xr' ? pointer.connected : true;
@@ -232,7 +232,7 @@ export class Pointers {
       pointer.reticle.position.copy(pointer.hitPoint)
         .addScaledVector(pointer.raycaster.ray.direction, -0.01);
       pointer.reticle.scale.setScalar(hit ? 1.5 : 1);
-      pointer.reticle.material.color.setHex(hit ? 0xffffff : 0x8fb4d8);
+      pointer.reticle.material.color.setHex(hit ? 0xF5E6C8 : 0xA79C86);
       pointer.reticle.material.opacity = hit ? 1 : 0.6;
     }
   }
