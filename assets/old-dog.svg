@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 240" width="260" height="240" role="img" aria-label="A grey-muzzled dog wearing a VR headset, built from triangles">
   <!--
-    The mark: an old dog assembled entirely out of triangles and wedges.
+    The mark: an old doggie assembled entirely out of triangles and wedges.
     Flat, three colours, no gradients — it has to survive being drawn small and
     being pasted onto a canvas texture inside the headset. Rounded corners come
     from stroking each shape in its own fill colour rather than from rx.

@@ -1,4 +1,4 @@
-# Raycasters for Old Dogs
+# Raycasters for Old Doggies
 
 A WebXR ray caster practice range for the Meta Quest browser. It teaches one
 thing — *point the beam, squeeze the trigger* — and shows a live diagnostics

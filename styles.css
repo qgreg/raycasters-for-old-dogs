@@ -55,6 +55,7 @@ canvas { display: block; }
   background: var(--biscuit);
   color: var(--ink);
   border-radius: 0 0 6px 6px;
+  margin-top: 26px;
   overflow: hidden;
   box-shadow: 0 18px 44px rgba(0, 0, 0, .38);
 }
@@ -79,7 +80,7 @@ canvas { display: block; }
 
 .cover__body {
   position: relative;
-  padding: clamp(26px, 5vw, 44px) clamp(20px, 5vw, 40px) 0;
+  padding: clamp(34px, 5.5vw, 52px) clamp(20px, 5vw, 40px) 0;
   min-height: 372px;
 }
 
