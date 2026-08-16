@@ -121,6 +121,25 @@ async function main() {
     check('and lands on a lesson that works without one',
       (await debug(() => window.__debug.lesson)) === 'aim');
 
+    // A finished lesson calls done() on every frame until the next one starts.
+    // Completing must be idempotent: otherwise the chord replays ~120 times and
+    // the praise line, picked at random, churns on every frame.
+    await debug(() => window.__debug.goto('aim'));
+    await page.waitForTimeout(300);
+    const before = await debug(() => window.__debug.completions);
+    const churn = await debug(() => {
+      const seen = new Set();
+      for (let i = 0; i < 120; i++) {
+        window.__debug.finish();
+        seen.add(window.__debug.board.instruction);
+      }
+      return { seen: seen.size, completions: window.__debug.completions };
+    });
+    check('120 done() calls complete the lesson once',
+      churn.completions - before === 1, `completed ${churn.completions - before}x`);
+    check('and the board settles on a single message',
+      churn.seen === 1, `${churn.seen} different messages`);
+
     check('no errors after interaction', errors.length === 0, errors.join(' | '));
     await page.screenshot({ path: path.join(ROOT, 'test', 'screenshot.png') });
   } finally {

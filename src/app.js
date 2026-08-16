@@ -136,6 +136,7 @@ let lesson = null;
 let finished = false;
 
 const stats = { hits: 0, misses: 0, totalMs: 0, bestMs: Infinity };
+let completions = 0;   // how many times a lesson has actually been completed
 
 const ctx = {
   targets: [],
@@ -243,6 +244,7 @@ function say(partial) {
 
 function startLesson(index) {
   finished = false;
+  completing = false;
   lessonIndex = index;
   lesson = LESSONS[index];
   ctx.clearTargets();
@@ -274,7 +276,16 @@ function nextLesson() {
   else showSummary();
 }
 
+// Lessons call ctx.done() from update(), which runs every frame — so a finished
+// lesson asks to complete on every frame until the next one starts. Completing
+// is idempotent per lesson: without this guard the chord replays ~120 times and
+// the praise line, being picked at random, changes on every frame.
+let completing = false;
+
 function completeLesson() {
+  if (completing || finished) return;
+  completing = true;
+  completions++;
   sfx.lessonDone();
   const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)];
   say({ instruction: praise, footer: 'Next one coming up…' });
@@ -289,6 +300,7 @@ function completeLesson() {
 
 function showSummary() {
   finished = true;
+  completing = false;
   lesson = null;
   ctx.clearTargets();
   const accuracy = stats.hits + stats.misses > 0
@@ -538,6 +550,10 @@ window.__debug = {
   get targets() { return ctx.targets.length; },
   get hovering() { return pointers.all.map((p) => p.hovered?.constructor.name ?? null).find(Boolean) ?? null; },
   get presenting() { return renderer.xr.isPresenting; },
+  get completions() { return completions; },
+  // Test seam: a finished lesson calls this every frame, so it must be safe to
+  // call repeatedly.
+  finish() { completeLesson(); },
   get systemTrips() { return systemTrips; },
   hands(visible = true) { setHandsVisible(visible); },
   goto(id) {
