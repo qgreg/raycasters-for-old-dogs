@@ -303,3 +303,5 @@ h2 {
 }
 #hint[hidden] { display: none; }
 #hint b { color: var(--cream); font-weight: 700; }
+
+.colophon a { color: var(--biscuit); }

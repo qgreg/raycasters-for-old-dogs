@@ -209,3 +209,11 @@ vendor/             three.js r185, MIT
 
 `window.__debug` exposes the running state (current lesson, score, what the
 ray is on) for poking at from the browser console.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Use it, fork it, point your own relatives at it.
+
+three.js is vendored in `vendor/` under its own MIT license, kept alongside it
+in `vendor/three.LICENSE`. There are no other dependencies, at build time or at
+runtime.

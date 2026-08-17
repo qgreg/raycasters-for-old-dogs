@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "license": "MIT",
+  "author": "Gregory L. Quinlan",
   "description": "A WebXR ray caster practice range for the Meta Quest browser.",
   "scripts": {
     "start": "python3 -m http.server 8080",
